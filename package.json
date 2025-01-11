@@ -3,11 +3,11 @@
   "main": "expo-router/entry",
   "version": "1.0.0",
   "scripts": {
-    "start": "expo start",
-    "reset-project": "node ./scripts/reset-project.js",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
-    "web": "expo start --web",
+    "dev": "APP_VARIANT=development npx expo start",
+    "build:sim:ios": "eas build --platform ios --profile ios-simulator",
+    "build:dev:ios": "eas build --platform ios --profile development",
+    "build:preview:ios": "eas build --platform ios --profile preview",
+    "build:prod:ios": "eas build --platform ios --profile production",
     "test": "jest --watchAll",
     "lint": "expo lint"
   },
@@ -38,7 +38,9 @@
     "react-native-safe-area-context": "4.12.0",
     "react-native-screens": "~4.4.0",
     "react-native-web": "~0.19.13",
-    "react-native-webview": "13.12.5"
+    "react-native-webview": "13.12.5",
+    "expo-dev-client": "~5.0.9",
+    "expo-updates": "~0.26.12"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
