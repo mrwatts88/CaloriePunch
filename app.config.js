@@ -41,8 +41,11 @@ export default {
     userInterfaceStyle: 'automatic',
     newArchEnabled: true,
     ios: {
-      supportsTablet: false,
+      supportsTablet: true,
       bundleIdentifier: getUniqueIdentifier(),
+      config: {
+        usesNonExemptEncryption: false
+      }
     },
     android: {
       package: getUniqueIdentifier(),

@@ -7,7 +7,11 @@
     "build:sim:ios": "eas build --platform ios --profile ios-simulator",
     "build:dev:ios": "eas build --platform ios --profile development",
     "build:preview:ios": "eas build --platform ios --profile preview",
-    "build:prod:ios": "eas build --platform ios --profile production",
+    "build:prod:ios": "eas build --platform ios --profile production --auto-submit",
+    "update:dev:": "eas update --branch development",
+    "update:preview:": "eas update --branch preview",
+    "update:prod:": "eas update --branch production",
+    "submit:prod:ios": "eas submit --platform ios --profile production",
     "test": "jest --watchAll",
     "lint": "expo lint"
   },
