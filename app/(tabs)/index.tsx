@@ -1,74 +1,115 @@
-import { Image, StyleSheet, Platform } from 'react-native';
+import React from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Icon from 'react-native-vector-icons/Ionicons';
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+type ButtonProps = {
+  title: string;
+  onPress: () => void;
+};
+
+type KeyboardProps = {
+  onSubmit?: (value: string) => void;
+  onValueChange?: (value: string) => void;
+};
 
 export default function HomeScreen() {
+  const handleFinalValue = (value: string) => {
+    console.log('Final value from Keyboard:', value);
+  };
+
+  const handleValueChange = (value: string) => {
+    console.log('Value from Keyboard:', value);
+  };
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12'
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+    <View style={styles.container}>
+      <Keyboard onSubmit={handleFinalValue} onValueChange={handleValueChange} />
+    </View>
   );
 }
 
+const Button: React.FC<ButtonProps> = ({ title, onPress }) => (
+  <TouchableOpacity style={styles.button} onPress={onPress}>
+    {
+      title === 'back' ? (
+        <Icon name="arrow-back" size={30} color="white" />
+      ) : title === 'submit' ? (
+        <Icon name="checkmark" size={30} color="white" />
+      ) : (
+        <Text style={styles.buttonText}>{title}</Text>
+      )
+    }
+  </TouchableOpacity>
+);
+
+const Keyboard: React.FC<KeyboardProps> = ({ onSubmit, onValueChange }) => {
+  const [value, setValue] = React.useState('');
+
+  const handleButtonPress = (key: string) => {
+    if (key === 'back') {
+      setValue((prev) => prev.slice(0, -1));
+    } else if (key === 'submit') {
+      onSubmit?.(parseInt(value || '0', 10).toString());
+      setValue('');
+    } else {
+      setValue((prev) => prev + key);
+    }
+  };
+
+  React.useEffect(() => {
+    onValueChange?.(value);
+  }, [value, onValueChange]);
+
+  const rows = [
+    [1, 2, 3],
+    [4, 5, 6],
+    [7, 8, 9],
+    ['back', 0, 'submit'],
+  ];
+
+  return (
+    <View>
+      {rows.map((row, rowIndex) => (
+        <View key={rowIndex} style={styles.row}>
+          {row.map((button) => (
+            <Button
+              key={button.toString()}
+              title={button.toString()}
+              onPress={() => handleButtonPress(button.toString())}
+            />
+          ))}
+        </View>
+      ))}
+    </View>
+  );
+};
+
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
+  container: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
-    gap: 8,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  row: {
+    flexDirection: 'row',
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  button: {
+    margin: 10,
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: '#4DC591',
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 30,
+    fontWeight: 'bold',
   },
 });
