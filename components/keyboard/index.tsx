@@ -6,19 +6,22 @@ import McIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 type ButtonProps = {
     title: string;
     onPress: () => void;
+    mode: 'calories' | 'weight';
 };
 
 type KeyboardProps = {
     onSubmit?: (value: string) => void;
     onValueChange?: (value: string) => void;
+    mode: 'calories' | 'weight';
 };
 
-const Button: React.FC<ButtonProps> = ({ title, onPress }) => (
+const Button: React.FC<ButtonProps> = ({ title, onPress, mode }) => (
     <TouchableOpacity
         style={[
             styles.button,
             {
-                backgroundColor: ['back', 'plusminus'].includes(title) ? '#8F98FF' : '#4DC591',
+                backgroundColor: ['back', 'plusminus'].includes(title) ? 
+                (mode === 'calories' ?  '#8F98FF' : '#FF7648') : '#4DC591',
             },
         ]}
         onPress={onPress}
@@ -33,10 +36,13 @@ const Button: React.FC<ButtonProps> = ({ title, onPress }) => (
     </TouchableOpacity>
 );
 
-const WideButton: React.FC<ButtonProps> = ({ title, onPress }) => (
+const WideButton: React.FC<ButtonProps> = ({ onPress, mode }) => (
     <TouchableOpacity
         style={[
             styles.wideButton,
+            {
+                backgroundColor: mode === 'calories' ? '#8F98FF' : '#FF7648',
+            },
         ]}
         onPress={onPress}
     >
@@ -44,7 +50,7 @@ const WideButton: React.FC<ButtonProps> = ({ title, onPress }) => (
     </TouchableOpacity>
 );
 
-export const Keyboard: React.FC<KeyboardProps> = ({ onSubmit, onValueChange }) => {
+export const Keyboard: React.FC<KeyboardProps> = ({ onSubmit, onValueChange, mode }) => {
     const [value, setValue] = React.useState('');
     const [isNegative, setIsNegative] = React.useState(false);
 
@@ -105,11 +111,12 @@ export const Keyboard: React.FC<KeyboardProps> = ({ onSubmit, onValueChange }) =
                             key={button.toString()}
                             title={button.toString()}
                             onPress={() => handleButtonPress(button.toString())}
+                            mode={mode}
                         />
                     ))}
                 </View>
             ))}
-            <WideButton title="submit" onPress={() => handleButtonPress('submit')} />
+            <WideButton mode={mode} title="submit" onPress={() => handleButtonPress('submit')} />
         </View>
     );
 };
@@ -131,7 +138,6 @@ const styles = StyleSheet.create({
     wideButton: {
         marginRight: 2,
         height: 60,
-        backgroundColor: '#8F98FF',
         justifyContent: 'center',
         alignItems: 'center',
     },
