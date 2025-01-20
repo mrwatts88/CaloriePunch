@@ -1,5 +1,5 @@
-import { Keyboard } from '@/components/keyboard';
-import React from 'react';
+import { CaloriesKeyboard, WeightKeyboard } from '@/components/keyboard';
+import React, { useEffect } from 'react';
 import { Pressable, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 
 enum Mode {
@@ -10,12 +10,26 @@ enum Mode {
 export default function HomeScreen() {
   const [mode, setMode] = React.useState(Mode.Calories);
   const [value, setValue] = React.useState('');
-  const handleFinalValue = (value: string) => {
-    console.log('Final value from Keyboard:', value);
+  const [todaysCalories, setTodaysCalories] = React.useState(0);
+  const [calorieGoal, setCalorieGoal] = React.useState(2500);
+  const [weight, setWeight] = React.useState(0);
+
+  useEffect(() => {
+    // TODO: get from local storage
+    setCalorieGoal(2500);
+    setWeight(226.3);
+  }, []);
+
+
+  const handleSubmitCalories = (value: string) => {
+    setTodaysCalories(prev => prev + parseInt(value));
+  };
+
+  const handleSubmitWeight = (value: string) => {
+    setWeight(parseFloat(value));
   };
 
   const handleValueChange = (value: string) => {
-    console.log('Value from Keyboard:', value);
     setValue(value);
   };
 
@@ -29,7 +43,7 @@ export default function HomeScreen() {
             mode === Mode.Calories ? styles.buttonPressed : styles.buttonRaised,
           ]}>
           <Text style={styles.upperBoxText}>Remaining</Text>
-          <Text style={[styles.upperBoxText, { marginBottom: 20 }]}>2100</Text>
+          <Text style={[styles.upperBoxText, { marginBottom: 20 }]}>{calorieGoal - todaysCalories}</Text>
           <Text style={styles.upperBoxText2}>Calorie Goal</Text>
           <Text style={styles.upperBoxText2}>2500</Text>
         </Pressable>
@@ -40,7 +54,7 @@ export default function HomeScreen() {
             mode === Mode.Weight ? styles.buttonPressed : styles.buttonRaised,
           ]}>
           <Text style={styles.upperBoxText}>Weight</Text>
-          <Text style={[styles.upperBoxText, { marginBottom: 20 }]}>226.7 lbs</Text>
+          <Text style={[styles.upperBoxText, { marginBottom: 20 }]}>{weight} lbs</Text>
           <Text style={styles.upperBoxText2}>2 Week Change</Text>
           <Text style={styles.upperBoxText2}>-1.6 lbs</Text>
         </Pressable>
@@ -55,7 +69,11 @@ export default function HomeScreen() {
           }
         </Text>}
       </View>
-      <Keyboard mode={mode} onSubmit={handleFinalValue} onValueChange={handleValueChange} />
+      {mode === Mode.Calories ? (
+        <CaloriesKeyboard onSubmit={handleSubmitCalories} onValueChange={handleValueChange} />
+      ) : (
+        <WeightKeyboard onSubmit={handleSubmitWeight} onValueChange={handleValueChange} />
+      )}
       <View style={styles.completeButton}>
         <Text style={styles.completeButtonText}>Complete Day</Text>
       </View>
