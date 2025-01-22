@@ -1,4 +1,5 @@
 import { CaloriesKeyboard, WeightKeyboard } from '@/components/keyboard';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useEffect } from 'react';
 import { Pressable, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
@@ -7,33 +8,74 @@ enum Mode {
   Weight = 'weight',
 }
 
+const getData = async (key: string) => {
+  try {
+    return await AsyncStorage.getItem(key);
+  } catch (e) {
+    console.error(e);
+  }
+};
+
+const storeData = async (key: string, value: string) => {
+  try {
+    await AsyncStorage.setItem(key, value);
+  } catch (e) {
+    console.error(e);
+  }
+};
+
 export default function HomeScreen() {
   const [mode, setMode] = React.useState(Mode.Calories);
   const [value, setValue] = React.useState('');
+  const [tdee, setTdee] = React.useState(2500);
+  const [deficit, setDeficit] = React.useState(500);
   const [todaysCalories, setTodaysCalories] = React.useState(0);
-  const [calorieGoal, setCalorieGoal] = React.useState(2500);
   const [weight, setWeight] = React.useState(0);
+  const [areLocalStatsLoaded, setAreLocalStatsLoaded] = React.useState(false);
+
+  const calorieGoal = tdee - deficit;
 
   useEffect(() => {
-    // TODO: get from local storage
-    setCalorieGoal(2500);
-    setWeight(226.3);
+    const init = async () => {
+      const localTDEE = await getData('tdee');
+      const deficit = await getData('deficit');
+      const localTodaysCalories = await getData('todaysCalories');
+      const localWeight = await getData('weight');
+
+      setTdee(localTDEE ? parseInt(localTDEE) : 2500);
+      setDeficit(deficit ? parseInt(deficit) : 500);
+      setTodaysCalories(localTodaysCalories ? parseInt(localTodaysCalories) : 0);
+      setWeight(localWeight ? parseFloat(localWeight) : 0);
+      setAreLocalStatsLoaded(true);
+    };
+
+    init();
   }, []);
 
-  const handleSubmitCalories = (value: string) => {
-    setTodaysCalories((prev) => prev + parseInt(value));
+  useEffect(() => {
+    if (!areLocalStatsLoaded) return;
+
+    storeData('tdee', tdee.toString());
+    storeData('deficit', deficit.toString());
+    storeData('todaysCalories', todaysCalories.toString());
+    storeData('weight', weight.toString());
+  }, [tdee, deficit, todaysCalories, weight]);
+
+  const handleSubmitCalories = (calories: string) => {
+    setTodaysCalories((prev) => prev + parseInt(calories));
   };
 
-  const handleSubmitWeight = (value: string) => {
-    setWeight(parseFloat(value));
+  const handleSubmitWeight = (weight: string) => {
+    setWeight(parseFloat(weight));
   };
 
-  const handleValueChange = (value: string) => {
-    setValue(value);
+  const handleValueChange = (changedValue: string) => {
+    setValue(changedValue);
   };
 
   const handleCompleteDay = () => {
     console.log(`Day completed: ${todaysCalories} calories, ${weight} lbs`);
+    setTodaysCalories(0);
   };
 
   return (
@@ -46,12 +88,26 @@ export default function HomeScreen() {
             mode === Mode.Calories ? styles.buttonPressed : styles.buttonRaised,
           ]}
         >
-          <Text style={styles.upperBoxText}>Remaining</Text>
-          <Text style={[styles.upperBoxText, { marginBottom: 20 }]}>
-            {calorieGoal - todaysCalories}
-          </Text>
-          <Text style={styles.upperBoxText2}>Calorie Goal</Text>
-          <Text style={styles.upperBoxText2}>2500</Text>
+          <View style={styles.upperBoxTextWrapper}>
+            <View>
+              <Text style={styles.upperBoxText2}>Calories</Text>
+              <Text style={[styles.upperBoxText, { marginBottom: 20 }]}>{todaysCalories}</Text>
+            </View>
+            <View>
+              <Text style={styles.upperBoxText2}>Remaining</Text>
+              <Text style={[styles.upperBoxText]}>{calorieGoal - todaysCalories}</Text>
+            </View>
+          </View>
+          <View style={styles.upperBoxTextWrapper}>
+            <View>
+              <Text style={styles.upperBoxText2}>Calorie Goal</Text>
+              <Text style={[styles.upperBoxText, { marginBottom: 20 }]}>{calorieGoal}</Text>
+            </View>
+            <View>
+              <Text style={styles.upperBoxText2}>TDEE</Text>
+              <Text style={styles.upperBoxText}>{tdee}</Text>
+            </View>
+          </View>
         </Pressable>
         <Pressable
           onPress={() => setMode(Mode.Weight)}
@@ -60,10 +116,14 @@ export default function HomeScreen() {
             mode === Mode.Weight ? styles.buttonPressed : styles.buttonRaised,
           ]}
         >
-          <Text style={styles.upperBoxText}>Weight</Text>
-          <Text style={[styles.upperBoxText, { marginBottom: 20 }]}>{weight} lbs</Text>
-          <Text style={styles.upperBoxText2}>2 Week Change</Text>
-          <Text style={styles.upperBoxText2}>-1.6 lbs</Text>
+          <View style={styles.upperBoxTextWrapper}>
+            <Text style={styles.upperBoxText2}>Weight (lbs)</Text>
+            <Text style={[styles.upperBoxText, { marginBottom: 0 }]}>{weight}</Text>
+          </View>
+          <View style={styles.upperBoxTextWrapper}>
+            <Text style={styles.upperBoxText2}>2 Wk Change</Text>
+            <Text style={styles.upperBoxText}>-1.6 lbs</Text>
+          </View>
         </Pressable>
       </View>
       <View
@@ -72,7 +132,7 @@ export default function HomeScreen() {
           mode === Mode.Weight ? { backgroundColor: '#FF7648' } : { backgroundColor: '#8F98FF' },
         ]}
       >
-        {value ? (
+        {value && value !== '0.0' ? (
           <Text style={styles.text}>{value}</Text>
         ) : (
           <Text
@@ -109,20 +169,22 @@ const styles = StyleSheet.create({
   upperContainer: {
     width: '100%',
     display: 'flex',
-    flexDirection: 'row',
+    flexDirection: 'column',
     justifyContent: 'space-between',
     marginBottom: 'auto',
     paddingTop: 20,
   },
   calorieBox: {
-    flex: 1,
     backgroundColor: '#8F98FF',
+    display: 'flex',
     borderRadius: 10,
-    marginRight: 10,
     padding: 16,
+    flexDirection: 'row',
   },
   weightBox: {
-    flex: 1,
+    display: 'flex',
+    justifyContent: 'center',
+    marginVertical: 10,
     borderRadius: 10,
     padding: 16,
     backgroundColor: '#FF7648',
@@ -130,6 +192,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 1,
     elevation: 2,
+    flexDirection: 'row',
+  },
+  upperBoxTextWrapper: {
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+    flex: 1,
   },
   buttonPressed: {
     shadowOffset: { width: 0, height: 1 },
