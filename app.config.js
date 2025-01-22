@@ -44,20 +44,20 @@ export default {
       supportsTablet: true,
       bundleIdentifier: getUniqueIdentifier(),
       config: {
-        usesNonExemptEncryption: false
-      }
+        usesNonExemptEncryption: false,
+      },
     },
     android: {
       package: getUniqueIdentifier(),
       adaptiveIcon: {
         foregroundImage: './assets/images/adaptive-icon.png',
-        backgroundColor: '#ffffff'
-      }
+        backgroundColor: '#ffffff',
+      },
     },
     web: {
       bundler: 'metro',
       output: 'static',
-      favicon: './assets/images/favicon.png'
+      favicon: './assets/images/favicon.png',
     },
     plugins: [
       'expo-router',
@@ -67,19 +67,19 @@ export default {
           image: './assets/images/splash-icon.png',
           imageWidth: 200,
           resizeMode: 'contain',
-          backgroundColor: '#ffffff'
-        }
-      ]
+          backgroundColor: '#ffffff',
+        },
+      ],
     ],
     experiments: { typedRoutes: true },
     extra: {
       router: { origin: false },
-      eas: { projectId: PROJECT_ID }
+      eas: { projectId: PROJECT_ID },
     },
     owner: OWNER,
     updates: {
-      url: `https://u.expo.dev/${PROJECT_ID}`
+      url: `https://u.expo.dev/${PROJECT_ID}`,
     },
-    runtimeVersion: { policy: 'appVersion' }
-  }
-}
+    runtimeVersion: { policy: 'appVersion' },
+  },
+};

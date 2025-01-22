@@ -1,6 +1,6 @@
 import { CaloriesKeyboard, WeightKeyboard } from '@/components/keyboard';
 import React, { useEffect } from 'react';
-import { Pressable, SafeAreaView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 enum Mode {
   Calories = 'calories',
@@ -20,9 +20,8 @@ export default function HomeScreen() {
     setWeight(226.3);
   }, []);
 
-
   const handleSubmitCalories = (value: string) => {
-    setTodaysCalories(prev => prev + parseInt(value));
+    setTodaysCalories((prev) => prev + parseInt(value));
   };
 
   const handleSubmitWeight = (value: string) => {
@@ -33,6 +32,10 @@ export default function HomeScreen() {
     setValue(value);
   };
 
+  const handleCompleteDay = () => {
+    console.log(`Day completed: ${todaysCalories} calories, ${weight} lbs`);
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.upperContainer}>
@@ -41,9 +44,12 @@ export default function HomeScreen() {
           style={[
             styles.calorieBox,
             mode === Mode.Calories ? styles.buttonPressed : styles.buttonRaised,
-          ]}>
+          ]}
+        >
           <Text style={styles.upperBoxText}>Remaining</Text>
-          <Text style={[styles.upperBoxText, { marginBottom: 20 }]}>{calorieGoal - todaysCalories}</Text>
+          <Text style={[styles.upperBoxText, { marginBottom: 20 }]}>
+            {calorieGoal - todaysCalories}
+          </Text>
           <Text style={styles.upperBoxText2}>Calorie Goal</Text>
           <Text style={styles.upperBoxText2}>2500</Text>
         </Pressable>
@@ -52,31 +58,43 @@ export default function HomeScreen() {
           style={[
             styles.weightBox,
             mode === Mode.Weight ? styles.buttonPressed : styles.buttonRaised,
-          ]}>
+          ]}
+        >
           <Text style={styles.upperBoxText}>Weight</Text>
           <Text style={[styles.upperBoxText, { marginBottom: 20 }]}>{weight} lbs</Text>
           <Text style={styles.upperBoxText2}>2 Week Change</Text>
           <Text style={styles.upperBoxText2}>-1.6 lbs</Text>
         </Pressable>
       </View>
-      <View style={[styles.numberContainer,
-      mode === Mode.Weight ? { backgroundColor: '#FF7648' } : { backgroundColor: '#8F98FF' }
-      ]}>
-        {value ? <Text style={styles.text}>{value}</Text> : <Text style={[styles.text, {
-          opacity: 0.5
-        }]}>Enter {
-            mode === Mode.Calories ? 'Calories' : 'Weight'
-          }
-        </Text>}
+      <View
+        style={[
+          styles.numberContainer,
+          mode === Mode.Weight ? { backgroundColor: '#FF7648' } : { backgroundColor: '#8F98FF' },
+        ]}
+      >
+        {value ? (
+          <Text style={styles.text}>{value}</Text>
+        ) : (
+          <Text
+            style={[
+              styles.text,
+              {
+                opacity: 0.5,
+              },
+            ]}
+          >
+            Enter {mode === Mode.Calories ? 'Calories' : 'Weight'}
+          </Text>
+        )}
       </View>
       {mode === Mode.Calories ? (
         <CaloriesKeyboard onSubmit={handleSubmitCalories} onValueChange={handleValueChange} />
       ) : (
         <WeightKeyboard onSubmit={handleSubmitWeight} onValueChange={handleValueChange} />
       )}
-      <View style={styles.completeButton}>
+      <TouchableOpacity onPress={handleCompleteDay} style={styles.completeButton}>
         <Text style={styles.completeButtonText}>Complete Day</Text>
-      </View>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 }
@@ -146,7 +164,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#8F98FF',
-    width: '100%'
+    width: '100%',
   },
   text: {
     color: 'white',
