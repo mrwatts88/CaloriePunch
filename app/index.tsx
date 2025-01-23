@@ -1,7 +1,11 @@
 import { CaloriesKeyboard, WeightKeyboard } from '@/components/keyboard';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Pressable, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+
+const dateToDashedDateString = (date: Date) => {
+  return date.toISOString().split('T')[0];
+};
 
 enum Mode {
   Calories = 'calories',
@@ -24,14 +28,130 @@ const storeData = async (key: string, value: string) => {
   }
 };
 
+type CalorieHistory = {
+  calories: number;
+  date: string;
+  weight: number;
+};
+
+const DEFAULT_DEFICIT = 400;
+const DEFAULT_TDEE = 2950;
+const DEFAULT_WEIGHT = 0;
+const DEFAULT_TODAYS_CALORIES = 0;
+const DEFAULT_CALORIE_HISTORY: CalorieHistory[] = [];
+
+const fillInCalorieHistory = (calorieHistory: CalorieHistory[]) => {
+  if (calorieHistory.length == 0) {
+    return [];
+  }
+
+  // this should take the calorie history and fill in the gaps with first value after the gap
+  // the result should be an array of 30 items
+
+  // create a map of date to calorie entry
+  const calorieMap = calorieHistory.reduce(
+    (acc, entry) => {
+      acc[entry.date] = entry;
+      return acc;
+    },
+    {} as Record<string, CalorieHistory>
+  );
+
+  const filledCalorieHistory: CalorieHistory[] = [];
+  let mostRecentRecordedDate = calorieHistory.at(-1)!.date;
+
+  for (let i = 0; i < 30; i++) {
+    const date = dateToDashedDateString(
+      new Date(new Date(calorieHistory.at(-1)!.date).getTime() - i * 24 * 60 * 60 * 1000)
+    );
+
+    if (calorieMap[date]) {
+      filledCalorieHistory.unshift(calorieMap[date]);
+      mostRecentRecordedDate = date;
+    } else {
+      filledCalorieHistory.unshift({
+        ...calorieMap[mostRecentRecordedDate],
+        date,
+      });
+    }
+  }
+
+  return filledCalorieHistory;
+};
+
+const calculateTwoWeekChange = (weightHistory: CalorieHistory[]) => {
+  // take the average of the most recent 14 days and compare to the average of the 14 days before that
+  // return the difference
+  if (weightHistory.length < 28) {
+    return 0;
+  }
+
+  const mostRecent28Days = weightHistory.slice(-28);
+  const lastTwoWeeks = mostRecent28Days.slice(-14);
+  const twoWeeksBefore = mostRecent28Days.slice(0, 14);
+
+  const lastTwoWeeksAvg = lastTwoWeeks.reduce((acc, entry) => acc + entry.weight, 0) / 14;
+  const twoWeeksBeforeAvg = twoWeeksBefore.reduce((acc, entry) => acc + entry.weight, 0) / 14;
+
+  // round to 1 decimal place
+  return Math.round((lastTwoWeeksAvg - twoWeeksBeforeAvg) * 10) / 10;
+};
+
+const exampleCalorieHistory: CalorieHistory[] = [
+  { calories: 2000, date: '2021-09-01', weight: 232.4 },
+  { calories: 2100, date: '2021-09-02', weight: 237.5 },
+  { calories: 2200, date: '2021-09-03', weight: 237.7 },
+  { calories: 2300, date: '2021-09-04', weight: 237.4 },
+  { calories: 2400, date: '2021-09-05', weight: 232.4 },
+  { calories: 2500, date: '2021-09-06', weight: 232.4 },
+  { calories: 2600, date: '2021-09-07', weight: 232.4 },
+  { calories: 2700, date: '2021-09-08', weight: 232.4 },
+  { calories: 2800, date: '2021-09-09', weight: 232.4 },
+  { calories: 2900, date: '2021-09-10', weight: 232.4 },
+  { calories: 3000, date: '2021-09-11', weight: 232.4 },
+  { calories: 3100, date: '2021-09-12', weight: 232.4 },
+  { calories: 3200, date: '2021-09-13', weight: 232.4 },
+  { calories: 3300, date: '2021-09-14', weight: 232.4 },
+  { calories: 3400, date: '2021-09-15', weight: 232.4 },
+  { calories: 3500, date: '2021-09-16', weight: 190.4 },
+  { calories: 3600, date: '2021-09-17', weight: 232.4 },
+  { calories: 3700, date: '2021-09-18', weight: 232.4 },
+  { calories: 3800, date: '2021-09-19', weight: 232.4 },
+  { calories: 3900, date: '2021-09-20', weight: 232.4 },
+  { calories: 4000, date: '2021-09-21', weight: 232.5 },
+  { calories: 4100, date: '2021-09-22', weight: 232.5 },
+  { calories: 4200, date: '2021-09-23', weight: 232.5 },
+  { calories: 4300, date: '2021-09-24', weight: 232.5 },
+  { calories: 4400, date: '2021-09-25', weight: 232.5 },
+  { calories: 4500, date: '2021-09-26', weight: 237.5 },
+  { calories: 4600, date: '2021-09-27', weight: 237.5 },
+  { calories: 4700, date: '2021-09-28', weight: 237.5 },
+  { calories: 4800, date: '2021-09-29', weight: 232.5 },
+  { calories: 4900, date: '2021-09-30', weight: 232.5 },
+  { calories: 5000, date: '2021-10-01', weight: 232.5 },
+  { calories: 5100, date: '2021-10-02', weight: 232.5 },
+  { calories: 5200, date: '2021-10-03', weight: 232.5 },
+  { calories: 5300, date: '2021-10-04', weight: 232.5 },
+  { calories: 5400, date: '2021-10-05', weight: 232.5 },
+  { calories: 5500, date: '2021-10-06', weight: 190.5 },
+  { calories: 5600, date: '2021-10-07', weight: 190.5 },
+  { calories: 5700, date: '2021-10-08', weight: 190.5 },
+  { calories: 5800, date: '2021-10-09', weight: 190.5 },
+  { calories: 5900, date: '2021-10-10', weight: 190.5 },
+  { calories: 6000, date: '2021-10-11', weight: 190.5 },
+];
+
 export default function HomeScreen() {
   const [mode, setMode] = React.useState(Mode.Calories);
   const [value, setValue] = React.useState('');
-  const [tdee, setTdee] = React.useState(2500);
-  const [deficit, setDeficit] = React.useState(500);
-  const [todaysCalories, setTodaysCalories] = React.useState(0);
-  const [weight, setWeight] = React.useState(0);
+  const [tdee, setTdee] = React.useState(DEFAULT_TDEE);
+  const [deficit, setDeficit] = React.useState(DEFAULT_DEFICIT);
+  const [todaysCalories, setTodaysCalories] = React.useState(DEFAULT_TODAYS_CALORIES);
+  const [weight, setWeight] = React.useState(DEFAULT_WEIGHT);
   const [areLocalStatsLoaded, setAreLocalStatsLoaded] = React.useState(false);
+
+  const [calorieHistory, setCalorieHistory] =
+    React.useState<CalorieHistory[]>(DEFAULT_CALORIE_HISTORY);
 
   const calorieGoal = tdee - deficit;
 
@@ -41,11 +161,17 @@ export default function HomeScreen() {
       const deficit = await getData('deficit');
       const localTodaysCalories = await getData('todaysCalories');
       const localWeight = await getData('weight');
+      const localCalorieHistory = await getData('calorieHistory');
 
-      setTdee(localTDEE ? parseInt(localTDEE) : 2500);
-      setDeficit(deficit ? parseInt(deficit) : 500);
-      setTodaysCalories(localTodaysCalories ? parseInt(localTodaysCalories) : 0);
-      setWeight(localWeight ? parseFloat(localWeight) : 0);
+      setTdee(localTDEE ? parseInt(localTDEE) : DEFAULT_TDEE);
+      setDeficit(deficit ? parseInt(deficit) : DEFAULT_DEFICIT);
+      setTodaysCalories(
+        localTodaysCalories ? parseInt(localTodaysCalories) : DEFAULT_TODAYS_CALORIES
+      );
+      setWeight(localWeight ? parseFloat(localWeight) : DEFAULT_WEIGHT);
+      setCalorieHistory(
+        localCalorieHistory ? JSON.parse(localCalorieHistory) : DEFAULT_CALORIE_HISTORY
+      );
       setAreLocalStatsLoaded(true);
     };
 
@@ -59,7 +185,8 @@ export default function HomeScreen() {
     storeData('deficit', deficit.toString());
     storeData('todaysCalories', todaysCalories.toString());
     storeData('weight', weight.toString());
-  }, [tdee, deficit, todaysCalories, weight]);
+    storeData('calorieHistory', JSON.stringify(calorieHistory));
+  }, [tdee, deficit, todaysCalories, weight, calorieHistory, areLocalStatsLoaded]);
 
   const handleSubmitCalories = (calories: string) => {
     setTodaysCalories((prev) => prev + parseInt(calories));
@@ -74,9 +201,43 @@ export default function HomeScreen() {
   };
 
   const handleCompleteDay = () => {
-    console.log(`Day completed: ${todaysCalories} calories, ${weight} lbs`);
+    // console.log(`Day completed: ${todaysCalories} calories, ${weight} lbs`);
+    // console.log(calculateTwoWeekChange(exampleCalorieHistory));
+    // console.log(JSON.stringify(fillInCalorieHistory(exampleCalorieHistory), null, 4));
+    // AsyncStorage.removeItem('calorieHistory');
+
+    const existingToday = calorieHistory.find(
+      (entry) => entry.date === dateToDashedDateString(new Date())
+    );
+
+    let updatedCalorieHistory: CalorieHistory[] = [];
+    if (existingToday) {
+      updatedCalorieHistory = calorieHistory.map((entry) => {
+        if (entry.date === dateToDashedDateString(new Date())) {
+          return {
+            ...entry,
+            calories: todaysCalories,
+            weight,
+          };
+        }
+        return entry;
+      });
+    } else {
+      updatedCalorieHistory = [
+        ...calorieHistory,
+        {
+          calories: todaysCalories,
+          date: dateToDashedDateString(new Date()),
+          weight,
+        },
+      ];
+    }
+
+    setCalorieHistory(fillInCalorieHistory(updatedCalorieHistory));
     setTodaysCalories(0);
   };
+
+  const twoWeekChange = useMemo(() => calculateTwoWeekChange(calorieHistory), [calorieHistory]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -122,7 +283,7 @@ export default function HomeScreen() {
           </View>
           <View style={styles.upperBoxTextWrapper}>
             <Text style={styles.upperBoxText2}>2 Wk Change</Text>
-            <Text style={styles.upperBoxText}>-1.6 lbs</Text>
+            <Text style={styles.upperBoxText}>{twoWeekChange}</Text>
           </View>
         </Pressable>
       </View>
