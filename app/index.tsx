@@ -1,7 +1,16 @@
 import { CaloriesKeyboard, WeightKeyboard } from '@/components/keyboard';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Haptics from 'expo-haptics';
 import React, { useEffect, useMemo } from 'react';
-import { Pressable, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  Alert,
+  Pressable,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
 const dateToDashedDateString = (date: Date) => {
   return date.toISOString().split('T')[0];
@@ -200,11 +209,27 @@ export default function HomeScreen() {
     setValue(changedValue);
   };
 
+  const showCompleteDayDialog = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+    Alert.alert('Complete Day', 'Are you sure you want to complete the day?', [
+      {
+        text: 'Cancel',
+        style: 'cancel',
+      },
+      {
+        text: 'Confirm',
+        onPress: handleCompleteDay,
+      },
+    ]);
+  };
+
   const handleCompleteDay = () => {
     // console.log(`Day completed: ${todaysCalories} calories, ${weight} lbs`);
     // console.log(calculateTwoWeekChange(exampleCalorieHistory));
     // console.log(JSON.stringify(fillInCalorieHistory(exampleCalorieHistory), null, 4));
     // AsyncStorage.removeItem('calorieHistory');
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
     const existingToday = calorieHistory.find(
       (entry) => entry.date === dateToDashedDateString(new Date())
@@ -243,7 +268,10 @@ export default function HomeScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.upperContainer}>
         <Pressable
-          onPress={() => setMode(Mode.Calories)}
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            setMode(Mode.Calories);
+          }}
           style={[
             styles.calorieBox,
             mode === Mode.Calories ? styles.buttonPressed : styles.buttonRaised,
@@ -271,7 +299,10 @@ export default function HomeScreen() {
           </View>
         </Pressable>
         <Pressable
-          onPress={() => setMode(Mode.Weight)}
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            setMode(Mode.Weight);
+          }}
           style={[
             styles.weightBox,
             mode === Mode.Weight ? styles.buttonPressed : styles.buttonRaised,
@@ -313,7 +344,7 @@ export default function HomeScreen() {
       ) : (
         <WeightKeyboard onSubmit={handleSubmitWeight} onValueChange={handleValueChange} />
       )}
-      <TouchableOpacity onPress={handleCompleteDay} style={styles.completeButton}>
+      <TouchableOpacity onPress={showCompleteDayDialog} style={styles.completeButton}>
         <Text style={styles.completeButtonText}>Complete Day</Text>
       </TouchableOpacity>
     </SafeAreaView>
