@@ -7,6 +7,7 @@ import McIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 type ButtonProps = {
   title: string;
   onPress: () => void;
+  isEnd?: boolean;
 };
 
 type KeyboardProps = {
@@ -14,12 +15,13 @@ type KeyboardProps = {
   onValueChange?: (value: string) => void;
 };
 
-const Button: React.FC<ButtonProps> = ({ title, onPress }) => (
+const Button: React.FC<ButtonProps> = ({ title, onPress, isEnd }) => (
   <TouchableOpacity
     style={[
       styles.button,
       {
         backgroundColor: ['back', 'plusminus'].includes(title) ? '#8F98FF' : '#4DC591',
+        marginRight: isEnd ? 0 : 2,
       },
     ]}
     onPress={() => {
@@ -112,11 +114,12 @@ export const CaloriesKeyboard: React.FC<KeyboardProps> = ({ onSubmit, onValueCha
     <View style={styles.container}>
       {rows.map((row, rowIndex) => (
         <View key={rowIndex} style={styles.row}>
-          {row.map((button) => (
+          {row.map((button, idx) => (
             <Button
               key={button.toString()}
               title={button.toString()}
               onPress={() => handleButtonPress(button.toString())}
+              isEnd={idx == 2}
             />
           ))}
         </View>
@@ -141,7 +144,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   wideButton: {
-    marginRight: 2,
     height: 60,
     justifyContent: 'center',
     alignItems: 'center',

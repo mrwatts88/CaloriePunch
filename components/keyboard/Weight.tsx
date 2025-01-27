@@ -6,6 +6,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 type ButtonProps = {
   title: string;
   onPress: () => void;
+  isEnd?: boolean;
 };
 
 type KeyboardProps = {
@@ -13,13 +14,14 @@ type KeyboardProps = {
   onValueChange?: (value: string) => void;
 };
 
-const Button: React.FC<ButtonProps> = ({ title, onPress }) => (
+const Button: React.FC<ButtonProps> = ({ title, onPress, isEnd }) => (
   <TouchableOpacity
     disabled={title === 'skip'}
     style={[
       styles.button,
       {
-        backgroundColor: ['back'].includes(title) ? '#FF7648' : '#4DC591',
+        backgroundColor: ['back', 'skip'].includes(title) ? '#FF7648' : '#4DC591',
+        marginRight: isEnd ? 0 : 2,
       },
     ]}
     onPress={() => {
@@ -111,11 +113,12 @@ export const WeightKeyboard: React.FC<KeyboardProps> = ({ onSubmit, onValueChang
     <View style={styles.container}>
       {rows.map((row, rowIndex) => (
         <View key={rowIndex} style={styles.row}>
-          {row.map((button) => (
+          {row.map((button, idx) => (
             <Button
               key={button.toString()}
               title={button.toString()}
               onPress={() => handleButtonPress(button.toString())}
+              isEnd={idx == 2}
             />
           ))}
         </View>
@@ -131,7 +134,6 @@ const styles = StyleSheet.create({
     maxWidth: 400,
   },
   button: {
-    marginRight: 2,
     marginBottom: 2,
     flex: 1,
     height: 60,
@@ -140,7 +142,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   wideButton: {
-    marginRight: 2,
     height: 60,
     justifyContent: 'center',
     alignItems: 'center',

@@ -13,6 +13,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import Icon from 'react-native-vector-icons/Ionicons';
 
 const dateToDashedDateString = (date: Date) => {
   return date.toISOString().split('T')[0];
@@ -348,7 +349,7 @@ export default function HomeScreen() {
   const twoWeekChange = useMemo(() => calculateTwoWeekChange(weightHistory), [weightHistory]);
 
   const isTodaysWeightLogged = useMemo(
-    () => weightHistory.at(-1)?.date !== dateToDashedDateString(new Date()),
+    () => weightHistory.at(-1) && weightHistory.at(-1)!.date === dateToDashedDateString(new Date()),
     [weightHistory]
   );
 
@@ -373,7 +374,22 @@ export default function HomeScreen() {
           }}
           style={[styles.weightBox, isTodaysWeightLogged ? '' : styles.buttonRaised]}
         >
-          <View style={styles.upperBoxTextWrapper}>
+          {!isTodaysWeightLogged && mode !== Mode.Weight && (
+            <View
+              style={{
+                position: 'absolute',
+                width: 15,
+                height: 15,
+                top: -5,
+                right: -5,
+                borderRadius: 100,
+                borderWidth: 1,
+                borderColor: 'grey',
+                backgroundColor: 'red',
+              }}
+            />
+          )}
+          <View>
             {isTodaysWeightLogged ? (
               <>
                 <Text style={styles.upperBoxText2}>2 Wk Weight Change</Text>
@@ -384,27 +400,23 @@ export default function HomeScreen() {
               </>
             ) : (
               <Text style={styles.upperBoxText}>
-                {mode === Mode.Weight ? '<-' : 'Enter Weight'}
+                {mode === Mode.Weight ? (
+                  <Icon name="arrow-back" size={20} color="white" />
+                ) : (
+                  <Text>Enter Today's Weight</Text>
+                )}
               </Text>
             )}
           </View>
         </TouchableOpacity>
         <Pressable
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-            setMode(Mode.Calories);
-          }}
           onLongPress={() => {
             setDebug((prev) => !prev);
           }}
           style={[styles.calorieBox]}
         >
-          <View style={styles.upperBoxTextWrapper}>
-            <View>
-              <Text style={styles.upperBoxText2}>Calories Left Today</Text>
-              <Text style={[styles.upperBoxText]}>{calorieGoal - todaysCalories}</Text>
-            </View>
-          </View>
+          <Text style={styles.upperBoxText3}>Calories Left Today</Text>
+          <Text style={[styles.caloriesLeftText]}>{calorieGoal - todaysCalories}</Text>
         </Pressable>
       </View>
       {debug ? (
@@ -440,35 +452,58 @@ export default function HomeScreen() {
       ) : (
         <>
           <View
-            style={[
-              styles.numberContainer,
-              mode === Mode.Weight
-                ? { backgroundColor: '#FF7648' }
-                : { backgroundColor: '#8F98FF' },
-            ]}
+            style={{
+              borderRadius: 10,
+              justifyContent: 'center',
+              alignItems: 'center',
+              overflow: 'hidden',
+              width: '100%',
+            }}
           >
-            {value && value !== '0.0' ? (
-              <Text style={styles.text}>{value}</Text>
+            <View
+              style={[
+                styles.numberContainer,
+                mode === Mode.Weight
+                  ? { backgroundColor: '#FF7648' }
+                  : { backgroundColor: '#8F98FF' },
+              ]}
+            >
+              {value ? (
+                <Text style={styles.text}>{value}</Text>
+              ) : (
+                <Text
+                  style={[
+                    styles.text,
+                    {
+                      opacity: 0.5,
+                    },
+                  ]}
+                >
+                  {mode === Mode.Calories ? 'Calories' : 'Weight'}
+                </Text>
+              )}
+            </View>
+            {mode === Mode.Calories ? (
+              <CaloriesKeyboard onSubmit={handleSubmitCalories} onValueChange={handleValueChange} />
             ) : (
-              <Text
-                style={[
-                  styles.text,
-                  {
-                    opacity: 0.5,
-                  },
-                ]}
-              >
-                Enter {mode === Mode.Calories ? 'Calories' : 'Weight'}
-              </Text>
+              <WeightKeyboard onSubmit={handleSubmitWeight} onValueChange={handleValueChange} />
             )}
           </View>
-          {mode === Mode.Calories ? (
-            <CaloriesKeyboard onSubmit={handleSubmitCalories} onValueChange={handleValueChange} />
-          ) : (
-            <WeightKeyboard onSubmit={handleSubmitWeight} onValueChange={handleValueChange} />
-          )}
-          <TouchableOpacity onPress={showCompleteDayDialog} style={styles.completeButton}>
-            <Text style={styles.completeButtonText}>Complete Day</Text>
+          <TouchableOpacity
+            disabled={mode !== Mode.Calories}
+            onPress={showCompleteDayDialog}
+            style={styles.completeButton}
+          >
+            <Text
+              style={[
+                styles.completeButtonText,
+                {
+                  opacity: mode === Mode.Calories ? 1 : 0.4,
+                },
+              ]}
+            >
+              Complete Day
+            </Text>
           </TouchableOpacity>
         </>
       )}
@@ -487,32 +522,28 @@ const styles = StyleSheet.create({
     width: '100%',
     display: 'flex',
     flexDirection: 'column',
-    justifyContent: 'space-between',
-    marginBottom: 'auto',
-    paddingTop: 20,
+    flex: 1,
+    minHeight: 200,
   },
   calorieBox: {
-    backgroundColor: '#8F98FF',
     display: 'flex',
     borderRadius: 10,
     padding: 16,
-    flexDirection: 'row',
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
   },
   weightBox: {
     display: 'flex',
     justifyContent: 'center',
-    marginVertical: 10,
+    alignItems: 'center',
+    marginBottom: 10,
     borderRadius: 10,
     padding: 16,
     backgroundColor: '#FF7648',
+    height: 55,
     flexDirection: 'row',
-  },
-  upperBoxTextWrapper: {
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
-    alignItems: 'center',
-    flex: 1,
   },
   buttonRaised: {
     shadowColor: '#000',
@@ -520,11 +551,18 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 4,
     elevation: 6,
-    borderWidth: 1,
+    // borderWidth: 1,
+    borderColor: 'grey',
   },
   upperBoxText: {
     color: 'white',
-    fontSize: 20,
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  caloriesLeftText: {
+    color: '#8F98FF',
+    fontSize: 64,
     fontWeight: 'bold',
     textAlign: 'center',
   },
@@ -534,11 +572,16 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
   },
+  upperBoxText3: {
+    color: '#8F98FF',
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
   numberContainer: {
-    borderRadius: 10,
     display: 'flex',
     padding: 10,
-    marginBottom: 24,
+    marginBottom: 2,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#8F98FF',
@@ -552,10 +595,19 @@ const styles = StyleSheet.create({
   completeButton: {
     backgroundColor: '#4DC591',
     padding: 16,
-    marginTop: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 10,
     borderRadius: 8,
-    marginBottom: 24,
+    height: 55,
     width: '100%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 6,
+    // borderWidth: 1,
+    borderColor: 'grey',
   },
   completeButtonText: {
     color: 'white',
