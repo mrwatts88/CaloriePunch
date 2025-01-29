@@ -16,7 +16,15 @@ import {
 import Icon from 'react-native-vector-icons/Ionicons';
 
 const dateToDashedDateString = (date: Date) => {
-  return date.toISOString().split('T')[0];
+  const options = {
+    year: 'numeric' as const,
+    month: '2-digit' as const,
+    day: '2-digit' as const,
+    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+  };
+  const dateString = date.toLocaleDateString('en-CA', options);
+
+  return dateString.replace(/\//g, '-');
 };
 
 enum Mode {
