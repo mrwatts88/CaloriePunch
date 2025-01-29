@@ -278,6 +278,7 @@ export default function HomeScreen() {
         </View>
         <View style={[styles.calorieBox]}>
           <Text style={styles.upperBoxText3}>Calories Left Today</Text>
+          {/* <Text style={styles.upperBoxText3}>Calories Left Today</Text> */}
           <Text style={[styles.caloriesLeftText]}>{calorieGoal - todaysCalories}</Text>
         </View>
       </View>
