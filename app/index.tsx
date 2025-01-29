@@ -1,260 +1,38 @@
+import { Debug } from '@/components/Debug';
 import { CaloriesKeyboard, WeightKeyboard } from '@/components/keyboard';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { SettingsPage } from '@/components/Settings';
+import {
+  calculateTdee,
+  calculateTwoWeekChange,
+  CalorieHistory,
+  dateToDashedDateString,
+  DEFAULT_CALORIE_HISTORY,
+  DEFAULT_TODAYS_CALORIES,
+  DEFAULT_WEIGHT_HISTORY,
+  DEFAULT_WEIGHT_LOSS_GOAL,
+  getData,
+  storeData,
+  WeightHistory,
+} from '@/utils/calories';
 import * as Haptics from 'expo-haptics';
 import React, { useEffect, useMemo, useState } from 'react';
-import {
-  Alert,
-  Button,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { Alert, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-
-const dateToDashedDateString = (date: Date) => {
-  const options = {
-    year: 'numeric' as const,
-    month: '2-digit' as const,
-    day: '2-digit' as const,
-    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-  };
-  const dateString = date.toLocaleDateString('en-CA', options);
-
-  return dateString.replace(/\//g, '-');
-};
 
 enum Mode {
   Calories = 'calories',
   Weight = 'weight',
 }
 
-const getData = async (key: string) => {
-  try {
-    return await AsyncStorage.getItem(key);
-  } catch (e) {
-    console.error(e);
-  }
-};
-
-const storeData = async (key: string, value: string) => {
-  try {
-    await AsyncStorage.setItem(key, value);
-  } catch (e) {
-    console.error(e);
-  }
-};
-
-type CalorieHistory = {
-  calories: number;
-  date: string;
-};
-
-type WeightHistory = {
-  date: string;
-  weight: number;
-};
-
-const DEFAULT_TODAYS_CALORIES = 0;
-const DEFAULT_CALORIE_HISTORY: CalorieHistory[] = [];
-const DEFAULT_WEIGHT_HISTORY: WeightHistory[] = [];
-const DEFAULT_TDEE = 2500;
-const DEFAULT_WEIGHT_LOSS_GOAL = 1.0;
-
-const fillInCalorieHistory = (rawCalorieHistory: CalorieHistory[]) => {
-  if (rawCalorieHistory.length == 0) {
-    return [];
-  }
-
-  const calorieHistory = rawCalorieHistory.sort(
-    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
-  );
-
-  // this should take the history and fill in the gaps with first value after the gap
-  // the result should be an array of 30 items
-  // It will also forward fill to today using the latest recorded value
-
-  const calorieMap = calorieHistory.reduce(
-    (acc, entry) => {
-      acc[entry.date] = entry;
-      return acc;
-    },
-    {} as Record<string, CalorieHistory>
-  );
-
-  const filledCalorieHistory: CalorieHistory[] = [];
-  let mostRecentRecordedDate = calorieHistory.at(-1)!.date;
-
-  for (let i = 0; i < 30; i++) {
-    const date = dateToDashedDateString(new Date(new Date().getTime() - i * 24 * 60 * 60 * 1000));
-
-    if (calorieMap[date]) {
-      filledCalorieHistory.unshift(calorieMap[date]);
-      mostRecentRecordedDate = date;
-    } else {
-      filledCalorieHistory.unshift({
-        ...calorieMap[mostRecentRecordedDate],
-        date,
-      });
-    }
-  }
-
-  return filledCalorieHistory;
-};
-
-const fillInWeightHistory = (rawWeightHistory: WeightHistory[]) => {
-  if (rawWeightHistory.length == 0) {
-    return [];
-  }
-
-  const weightHistory = rawWeightHistory.sort(
-    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
-  );
-
-  // this should take the history and fill in the gaps with first value after the gap
-  // the result should be an array of 30 items
-  // It will also forward fill to today using the latest recorded value
-
-  const weightMap = weightHistory.reduce(
-    (acc, entry) => {
-      acc[entry.date] = entry;
-      return acc;
-    },
-    {} as Record<string, WeightHistory>
-  );
-
-  const filledHistory: WeightHistory[] = [];
-  let mostRecentRecordedDate = weightHistory.at(-1)!.date;
-
-  for (let i = 0; i < 30; i++) {
-    const date = dateToDashedDateString(new Date(new Date().getTime() - i * 24 * 60 * 60 * 1000));
-
-    if (weightMap[date]) {
-      filledHistory.unshift(weightMap[date]);
-      mostRecentRecordedDate = date;
-    } else {
-      filledHistory.unshift({
-        ...weightMap[mostRecentRecordedDate],
-        date,
-      });
-    }
-  }
-
-  return filledHistory;
-};
-
-const calculateTwoWeekChange = (weightHistory: WeightHistory[]) => {
-  // take the average of the most recent 14 days and compare to the average of the 14 days before that
-  // return the difference
-
-  const filledIn = fillInWeightHistory(weightHistory);
-
-  const mostRecent28Days = filledIn.slice(-28);
-  const lastTwoWeeks = mostRecent28Days.slice(-14);
-  const twoWeeksBefore = mostRecent28Days.slice(0, 14);
-
-  const lastTwoWeeksAvg = lastTwoWeeks.reduce((acc, entry) => acc + entry.weight!, 0) / 14;
-  const twoWeeksBeforeAvg = twoWeeksBefore.reduce((acc, entry) => acc + entry.weight!, 0) / 14;
-
-  // round to 1 decimal place
-  return Math.round((lastTwoWeeksAvg - twoWeeksBeforeAvg) * 10) / 10;
-};
-
-const calculateTdee = (weightHistory: WeightHistory[], calorieHistory: CalorieHistory[]) => {
-  if (weightHistory.length < 14 || calorieHistory.length < 14) {
-    // if there are not 14 entries in the last 30 days for either weight or calories, return the default TDEE
-    // later this default should be calculated based on the user's gender, age, weight, and activity level
-    return DEFAULT_TDEE;
-  }
-
-  const filledInCalorieHistory = fillInCalorieHistory(calorieHistory);
-
-  // sum the most recent 28 days of calories, not including today
-  const mostRecent28DaysNotIncludingToday = filledInCalorieHistory.slice(-29, -1);
-  const calories = mostRecent28DaysNotIncludingToday.reduce(
-    (acc, entry) => acc + entry.calories,
-    0
-  );
-
-  const twoWeekChange = calculateTwoWeekChange(weightHistory);
-  const totalCaloriesLost = twoWeekChange * 3500;
-  const totalCaloriesEaten = calories / 2; // we summed 28 days, so divide by 2 to get 14 day average
-  const totalCaloriesBurned = totalCaloriesEaten + totalCaloriesLost;
-
-  return totalCaloriesBurned / 14;
-};
-
-const exampleCalorieHistory: CalorieHistory[] = [
-  { calories: 2000, date: '2021-09-01' },
-  { calories: 2100, date: '2021-09-02' },
-  { calories: 2200, date: '2021-09-03' },
-  { calories: 2300, date: '2021-09-04' },
-  { calories: 2600, date: '2021-09-07' },
-  { calories: 2700, date: '2021-09-08' },
-  { calories: 2800, date: '2021-09-09' },
-  { calories: 2900, date: '2021-09-10' },
-  { calories: 3200, date: '2021-09-13' },
-  { calories: 3300, date: '2021-09-14' },
-  { calories: 3400, date: '2021-09-15' },
-  { calories: 3700, date: '2021-09-18' },
-  { calories: 3800, date: '2021-09-19' },
-  { calories: 3900, date: '2021-09-20' },
-  { calories: 4200, date: '2021-09-23' },
-  { calories: 4300, date: '2021-09-24' },
-  { calories: 4400, date: '2021-09-25' },
-  { calories: 4500, date: '2021-09-26' },
-  { calories: 4800, date: '2021-09-29' },
-  { calories: 4900, date: '2021-09-30' },
-  { calories: 5200, date: '2021-10-03' },
-  { calories: 5300, date: '2021-10-04' },
-  { calories: 1111, date: '2025-01-03' },
-  { calories: 3333, date: '2025-01-06' },
-  { calories: 2122, date: '2025-01-11' },
-];
-
-const exampleWeightHistory: WeightHistory[] = [
-  { date: '2021-09-01', weight: 232.4 },
-  { date: '2021-09-02', weight: 237.5 },
-  { date: '2021-09-03', weight: 237.7 },
-  { date: '2021-09-04', weight: 237.4 },
-  { date: '2021-09-07', weight: 232.4 },
-  { date: '2021-09-08', weight: 232.4 },
-  { date: '2021-09-09', weight: 232.4 },
-  { date: '2021-09-10', weight: 232.4 },
-  { date: '2021-09-13', weight: 232.4 },
-  { date: '2021-09-14', weight: 232.4 },
-  { date: '2021-09-15', weight: 232.4 },
-  { date: '2021-09-18', weight: 232.4 },
-  { date: '2021-09-19', weight: 232.4 },
-  { date: '2021-09-20', weight: 232.4 },
-  { date: '2021-09-23', weight: 232.5 },
-  { date: '2021-09-24', weight: 232.5 },
-  { date: '2021-09-25', weight: 232.5 },
-  { date: '2021-09-26', weight: 237.5 },
-  { date: '2021-09-29', weight: 232.5 },
-  { date: '2021-09-30', weight: 232.5 },
-  { date: '2021-10-04', weight: 232.5 },
-  { date: '2021-10-07', weight: 190.5 },
-  { date: '2021-10-08', weight: 190.5 },
-  { date: '2021-10-09', weight: 190.5 },
-  { date: '2025-01-05', weight: 188.5 },
-  { date: '2025-01-11', weight: 174.5 },
-];
-
 export default function HomeScreen() {
   const [debug, setDebug] = useState(false);
-  const [mode, setMode] = React.useState(Mode.Calories);
-  const [value, setValue] = React.useState('');
-  const [todaysCalories, setTodaysCalories] = React.useState(DEFAULT_TODAYS_CALORIES);
-  const [areLocalStatsLoaded, setAreLocalStatsLoaded] = React.useState(false);
-  const [showSettings, setShowSettings] = React.useState(false);
+  const [mode, setMode] = useState(Mode.Calories);
+  const [value, setValue] = useState('');
+  const [todaysCalories, setTodaysCalories] = useState(DEFAULT_TODAYS_CALORIES);
+  const [areLocalStatsLoaded, setAreLocalStatsLoaded] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [weightLossGoal, setWeightLossGoal] = useState(DEFAULT_WEIGHT_LOSS_GOAL);
-
-  const [calorieHistory, setCalorieHistory] =
-    React.useState<CalorieHistory[]>(DEFAULT_CALORIE_HISTORY);
-
+  const [calorieHistory, setCalorieHistory] = useState<CalorieHistory[]>(DEFAULT_CALORIE_HISTORY);
   const [weightHistory, setWeightHistory] = useState<WeightHistory[]>(DEFAULT_WEIGHT_HISTORY);
 
   useEffect(() => {
@@ -396,80 +174,26 @@ export default function HomeScreen() {
 
   if (debug) {
     return (
-      <SafeAreaView style={styles.container}>
-        <ScrollView style={{ width: '100%' }}>
-          <Button
-            title="Back"
-            onPress={() => {
-              setDebug(false);
-            }}
-          />
-          <Button
-            title="Reset"
-            onPress={() => {
-              AsyncStorage.clear();
-              // setWeightHistory(exampleWeightHistory);
-              // setCalorieHistory(exampleCalorieHistory);
-            }}
-          />
-          <Text>TDEE: {tdee} cals/day</Text>
-          <Text>Weight Loss Goal: {weightLossGoal} lbs/wk</Text>
-          <Text>Deficit: {deficit} cals/day</Text>
-          <Text>Goal: {tdee - deficit} cals/day</Text>
-          <Text>Today Cals: {todaysCalories}</Text>
-          <Text>Calories Left: {calorieGoal - todaysCalories}</Text>
-          <Text />
-          <Text style={{ fontWeight: 'bold' }}>Weight History:</Text>
-          {weightHistory.map((ch) => {
-            return <Text key={ch.date}>{JSON.stringify(ch)}</Text>;
-          })}
-          <Text />
-          <Text
-            style={{
-              fontWeight: 'bold',
-            }}
-          >
-            Filled in Weight History:
-          </Text>
-          {fillInWeightHistory(weightHistory).map((ch) => {
-            return <Text key={ch.date}>{JSON.stringify(ch)}</Text>;
-          })}
-          <Text />
-          <Text
-            style={{
-              fontWeight: 'bold',
-            }}
-          >
-            Calorie History:
-          </Text>
-          {calorieHistory.map((ch) => {
-            return <Text key={ch.date}>{JSON.stringify(ch)}</Text>;
-          })}
-          <Text />
-          <Text
-            style={{
-              fontWeight: 'bold',
-            }}
-          >
-            Filled in Calorie History:
-          </Text>
-          {fillInCalorieHistory(calorieHistory).map((ch) => {
-            return <Text key={ch.date}>{JSON.stringify(ch)}</Text>;
-          })}
-        </ScrollView>
-      </SafeAreaView>
+      <Debug
+        close={() => setDebug(false)}
+        tdee={tdee}
+        weightLossGoal={weightLossGoal}
+        deficit={deficit}
+        todaysCalories={todaysCalories}
+        calorieGoal={calorieGoal}
+        weightHistory={weightHistory}
+        calorieHistory={calorieHistory}
+      />
     );
   }
 
   if (showSettings) {
     return (
-      <SafeAreaView style={styles.container}>
-        <SettingsPage
-          close={() => setShowSettings(false)}
-          updateWeightLossGoal={setWeightLossGoal}
-          weightLossGoal={weightLossGoal}
-        />
-      </SafeAreaView>
+      <SettingsPage
+        close={() => setShowSettings(false)}
+        updateWeightLossGoal={setWeightLossGoal}
+        weightLossGoal={weightLossGoal}
+      />
     );
   }
 
@@ -717,102 +441,3 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
-
-type SettingsPageProps = {
-  close: () => void;
-  updateWeightLossGoal: (goal: number) => void;
-  weightLossGoal: number;
-};
-
-const SettingsPage = ({ close, updateWeightLossGoal, weightLossGoal }: SettingsPageProps) => {
-  return (
-    <View style={{ flex: 1, alignItems: 'center' }}>
-      <Text
-        style={{
-          fontSize: 24,
-          marginVertical: 10,
-        }}
-      >
-        Settings
-      </Text>
-      <Text
-        style={{
-          marginVertical: 10,
-        }}
-      >
-        Weight Loss Goal (lbs/week)
-      </Text>
-      <View
-        style={{
-          display: 'flex',
-          flexDirection: 'row',
-          marginBottom: 10,
-        }}
-      >
-        <TouchableOpacity
-          onPress={() => {
-            updateWeightLossGoal(0.25);
-          }}
-          style={{
-            backgroundColor: weightLossGoal === 0.25 ? 'grey' : 'lightgrey',
-            padding: 10,
-            borderTopLeftRadius: 10,
-            borderBottomLeftRadius: 10,
-            width: 50,
-            borderRightWidth: 1,
-            borderRightColor: 'white',
-          }}
-        >
-          <Text
-            style={{
-              textAlign: 'center',
-            }}
-          >
-            0.25
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => {
-            updateWeightLossGoal(0.5);
-          }}
-          style={{
-            backgroundColor: weightLossGoal === 0.5 ? 'grey' : 'lightgrey',
-            padding: 10,
-            width: 50,
-          }}
-        >
-          <Text
-            style={{
-              textAlign: 'center',
-            }}
-          >
-            0.5
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => {
-            updateWeightLossGoal(1.0);
-          }}
-          style={{
-            backgroundColor: weightLossGoal === 1.0 ? 'grey' : 'lightgrey',
-            padding: 10,
-            borderTopRightRadius: 10,
-            borderBottomRightRadius: 10,
-            width: 50,
-            borderLeftWidth: 1,
-            borderLeftColor: 'white',
-          }}
-        >
-          <Text
-            style={{
-              textAlign: 'center',
-            }}
-          >
-            1
-          </Text>
-        </TouchableOpacity>
-      </View>
-      <Button title="Close" onPress={close} />
-    </View>
-  );
-};
