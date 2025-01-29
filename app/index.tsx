@@ -2,22 +2,10 @@ import { AppContainer } from '@/components/AppContainer';
 import { Debug } from '@/components/Debug';
 import { CaloriesKeyboard, WeightKeyboard } from '@/components/keyboard';
 import { SettingsPage } from '@/components/Settings';
-import {
-  calculateTdee,
-  calculateTwoWeekChange,
-  CalorieHistory,
-  dateToDashedDateString,
-  DEFAULT_CALORIE_HISTORY,
-  DEFAULT_TODAYS_CALORIES,
-  DEFAULT_WEIGHT_HISTORY,
-  DEFAULT_WEIGHT_LOSS_GOAL,
-  getData,
-  storeData,
-  WeightHistory,
-} from '@/utils/calories';
+import { useWeightLoss, WeightLossProvider } from '@/context/WeightLossContext';
 import * as Haptics from 'expo-haptics';
-import React, { useEffect, useMemo, useState } from 'react';
-import { Alert, Text, TouchableOpacity, View } from 'react-native';
+import React, { useEffect } from 'react';
+import { Text, TouchableOpacity, View } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 
 enum Mode {
@@ -25,147 +13,30 @@ enum Mode {
   Weight = 'weight',
 }
 
-export default function HomeScreen() {
-  const [debug, setDebug] = useState(false);
-  const [mode, setMode] = useState(Mode.Calories);
-  const [value, setValue] = useState('');
-  const [todaysCalories, setTodaysCalories] = useState(DEFAULT_TODAYS_CALORIES);
-  const [showSettings, setShowSettings] = useState(false);
-  const [weightLossGoal, setWeightLossGoal] = useState(DEFAULT_WEIGHT_LOSS_GOAL);
-  const [calorieHistory, setCalorieHistory] = useState<CalorieHistory[]>(DEFAULT_CALORIE_HISTORY);
-  const [weightHistory, setWeightHistory] = useState<WeightHistory[]>(DEFAULT_WEIGHT_HISTORY);
-  const [areLocalStatsLoaded, setAreLocalStatsLoaded] = useState(false);
-
-  useEffect(() => {
-    const init = async () => {
-      const localTodaysCalories = await getData('todaysCalories');
-      const localCalorieHistory = await getData('calorieHistory');
-      const localWeightHistory = await getData('weightHistory');
-      const localWeightLossGoal = await getData('weightLossGoal');
-
-      setTodaysCalories(
-        localTodaysCalories ? parseInt(localTodaysCalories) : DEFAULT_TODAYS_CALORIES
-      );
-      setCalorieHistory(
-        localCalorieHistory ? JSON.parse(localCalorieHistory) : DEFAULT_CALORIE_HISTORY
-      );
-      setWeightHistory(
-        localWeightHistory ? JSON.parse(localWeightHistory) : DEFAULT_WEIGHT_HISTORY
-      );
-      setWeightLossGoal(
-        localWeightLossGoal ? parseFloat(localWeightLossGoal) : DEFAULT_WEIGHT_LOSS_GOAL
-      );
-      setAreLocalStatsLoaded(true);
-    };
-
-    init();
-  }, []);
-
-  useEffect(() => {
-    if (!areLocalStatsLoaded) return;
-
-    storeData('todaysCalories', todaysCalories.toString());
-    storeData('calorieHistory', JSON.stringify(calorieHistory));
-    storeData('weightHistory', JSON.stringify(weightHistory));
-    storeData('weightLossGoal', weightLossGoal.toString());
-  }, [todaysCalories, calorieHistory, weightHistory, weightLossGoal, areLocalStatsLoaded]);
-
-  const handleSubmitCalories = (calories: string) => {
-    setTodaysCalories((prev) => prev + parseInt(calories));
-  };
-
-  const handleSubmitWeight = (weight: string) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-
-    const existingToday = weightHistory.find(
-      (entry) => entry.date === dateToDashedDateString(new Date())
-    );
-
-    let updatedWeightHistory: WeightHistory[] = [];
-    if (existingToday) {
-      updatedWeightHistory = weightHistory.map((entry) => {
-        if (entry.date === dateToDashedDateString(new Date())) {
-          return {
-            ...entry,
-            weight: parseFloat(weight),
-          };
-        }
-        return entry;
-      });
-    } else {
-      updatedWeightHistory = [
-        ...weightHistory,
-        {
-          date: dateToDashedDateString(new Date()),
-          weight: parseFloat(weight),
-        },
-      ];
-    }
-
-    setWeightHistory(updatedWeightHistory.slice(-30)); // todo: cut off entries older than 30 days
-  };
-
-  const handleValueChange = (changedValue: string) => {
-    setValue(changedValue);
-  };
-
-  const showCompleteDayDialog = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-
-    Alert.alert('Complete Day', 'Are you sure you want to complete the day?', [
-      {
-        text: 'Cancel',
-        style: 'cancel',
-      },
-      {
-        text: 'Confirm',
-        onPress: handleCompleteDay,
-      },
-    ]);
-  };
-
-  const handleCompleteDay = () => {
-    const existingToday = calorieHistory.find(
-      (entry) => entry.date === dateToDashedDateString(new Date())
-    );
-
-    let updatedCalorieHistory: CalorieHistory[] = [];
-    if (existingToday) {
-      updatedCalorieHistory = calorieHistory.map((entry) => {
-        if (entry.date === dateToDashedDateString(new Date())) {
-          return {
-            ...entry,
-            calories: todaysCalories,
-          };
-        }
-        return entry;
-      });
-    } else {
-      updatedCalorieHistory = [
-        ...calorieHistory,
-        {
-          calories: todaysCalories,
-          date: dateToDashedDateString(new Date()),
-        },
-      ];
-    }
-
-    setCalorieHistory(updatedCalorieHistory.slice(-30)); // todo: cut off entries older than 30 days
-    setTodaysCalories(0);
-  };
-
-  const twoWeekChange = useMemo(() => calculateTwoWeekChange(weightHistory), [weightHistory]);
-  const tdee = useMemo(
-    () => calculateTdee(weightHistory, calorieHistory),
-    [weightHistory, calorieHistory]
-  );
-  const deficit = useMemo(() => (weightLossGoal * 3500) / 7, [weightLossGoal]);
-  const calorieGoal = tdee - deficit;
-
-  const isTodaysWeightLogged = useMemo(
-    () => weightHistory.at(-1) && weightHistory.at(-1)!.date === dateToDashedDateString(new Date()),
-    [weightHistory]
-  );
+const HomeScreen = () => {
+  const {
+    debug,
+    setDebug,
+    mode,
+    setMode,
+    value,
+    handleValueChange,
+    showSettings,
+    setShowSettings,
+    todaysCalories,
+    handleSubmitCalories,
+    weightLossGoal,
+    setWeightLossGoal,
+    calorieHistory,
+    handleSubmitWeight,
+    weightHistory,
+    showCompleteDayDialog,
+    twoWeekChange,
+    tdee,
+    deficit,
+    calorieGoal,
+    isTodaysWeightLogged,
+  } = useWeightLoss();
 
   useEffect(() => {
     if (isTodaysWeightLogged) {
@@ -290,5 +161,13 @@ export default function HomeScreen() {
         </Text>
       </TouchableOpacity>
     </AppContainer>
+  );
+};
+
+export default function App() {
+  return (
+    <WeightLossProvider>
+      <HomeScreen />
+    </WeightLossProvider>
   );
 }
