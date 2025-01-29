@@ -16,7 +16,7 @@ import {
 } from '@/utils/calories';
 import * as Haptics from 'expo-haptics';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Alert, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, SafeAreaView, Text, TouchableOpacity, View } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 
 enum Mode {
@@ -198,19 +198,11 @@ export default function HomeScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.upperContainer}>
-        <View
-          style={{
-            display: 'flex',
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            width: '100%',
-          }}
-        >
+    <SafeAreaView className="flex-1 justify-end items-center mx-5">
+      <View className="w-full flex flex-col flex-1 min-h-[200px]">
+        <View className="flex flex-row justify-between items-center w-full">
           <TouchableOpacity
-            disabled={isTodaysWeightLogged}
+            // disabled={isTodaysWeightLogged}
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
               if (mode === Mode.Weight) {
@@ -219,34 +211,24 @@ export default function HomeScreen() {
                 setMode(Mode.Weight);
               }
             }}
-            style={[styles.weightBox, isTodaysWeightLogged ? '' : styles.buttonRaised]}
+            className={`flex justify-center items-center flex-1 mr-4 rounded-lg p-4 bg-[#FF7648] h-[55px] flex-row ${isTodaysWeightLogged ? '' : 'shadow-md border-gray-400'}`}
           >
             {!isTodaysWeightLogged && mode !== Mode.Weight && (
-              <View
-                style={{
-                  position: 'absolute',
-                  width: 15,
-                  height: 15,
-                  top: -5,
-                  right: -5,
-                  borderRadius: 100,
-                  borderWidth: 1,
-                  borderColor: 'grey',
-                  backgroundColor: 'red',
-                }}
-              />
+              <View className="absolute w-[15px] h-[15px] top-[-5px] right-[-5px] rounded-full border border-gray-400 bg-red-500" />
             )}
             <View>
               {isTodaysWeightLogged ? (
                 <>
-                  <Text style={styles.upperBoxText2}>2 Wk Weight Change</Text>
-                  <Text style={styles.upperBoxText}>
+                  <Text className="text-white text-lg font-bold text-center">
+                    2 Wk Weight Change
+                  </Text>
+                  <Text className="text-white text-lg font-bold text-center">
                     {twoWeekChange > 0 ? '+' : ''}
                     {twoWeekChange} lbs
                   </Text>
                 </>
               ) : (
-                <Text style={styles.upperBoxText}>
+                <Text className="text-white text-lg font-bold text-center">
                   {mode === Mode.Weight ? (
                     <Icon name="arrow-back" size={20} color="white" />
                   ) : (
@@ -263,51 +245,26 @@ export default function HomeScreen() {
             onPress={() => {
               setShowSettings(true);
             }}
-            style={{
-              height: 55,
-              width: 55,
-              borderRadius: 10,
-              justifyContent: 'center',
-              alignItems: 'center',
-              borderWidth: 2,
-              borderColor: '#FF7648',
-            }}
+            className="h-[55px] w-[55px] rounded-lg justify-center items-center border-2 border-[#FF7648]"
           >
             <Icon name="settings" size={30} color="black" />
           </TouchableOpacity>
         </View>
-        <View style={[styles.calorieBox]}>
-          <Text style={styles.upperBoxText3}>Calories Left Today</Text>
-          {/* <Text style={styles.upperBoxText3}>Calories Left Today</Text> */}
-          <Text style={[styles.caloriesLeftText]}>{calorieGoal - todaysCalories}</Text>
+        <View className="flex rounded-lg p-4 flex-1 justify-center items-center mb-2">
+          <Text className="text-[#8F98FF] text-lg font-bold text-center">Calories Left Today</Text>
+          <Text className="text-[#8F98FF] text-6xl font-bold text-center">
+            {calorieGoal - todaysCalories}
+          </Text>
         </View>
       </View>
-      <View
-        style={{
-          borderRadius: 10,
-          justifyContent: 'center',
-          alignItems: 'center',
-          overflow: 'hidden',
-          width: '100%',
-        }}
-      >
+      <View className="rounded-lg justify-center items-center overflow-hidden w-full">
         <View
-          style={[
-            styles.numberContainer,
-            mode === Mode.Weight ? { backgroundColor: '#FF7648' } : { backgroundColor: '#8F98FF' },
-          ]}
+          className={`h-[60px] flex p-2 mb-[2px] justify-center items-center w-full ${mode === Mode.Weight ? 'bg-[#FF7648]' : 'bg-[#8F98FF]'}`}
         >
           {value ? (
-            <Text style={styles.text}>{value}</Text>
+            <Text className="text-white text-4xl font-bold">{value}</Text>
           ) : (
-            <Text
-              style={[
-                styles.text,
-                {
-                  opacity: 0.5,
-                },
-              ]}
-            >
+            <Text className="text-white text-4xl font-bold opacity-50">
               {mode === Mode.Calories ? 'Calories' : 'Weight'}
             </Text>
           )}
@@ -321,15 +278,10 @@ export default function HomeScreen() {
       <TouchableOpacity
         disabled={mode !== Mode.Calories}
         onPress={showCompleteDayDialog}
-        style={styles.completeButton}
+        className="bg-[#4DC591] p-4 justify-center items-center mt-2 rounded-lg h-[55px] w-full shadow-md border-gray-400"
       >
         <Text
-          style={[
-            styles.completeButtonText,
-            {
-              opacity: mode === Mode.Calories ? 1 : 0.4,
-            },
-          ]}
+          className={`text-white text-lg font-bold text-center ${mode === Mode.Calories ? 'opacity-100' : 'opacity-40'}`}
         >
           Complete Day
         </Text>
@@ -337,108 +289,3 @@ export default function HomeScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-    marginHorizontal: 20,
-  },
-  upperContainer: {
-    width: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    flex: 1,
-    minHeight: 200,
-  },
-  calorieBox: {
-    display: 'flex',
-    borderRadius: 10,
-    padding: 16,
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  weightBox: {
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    flex: 1,
-    marginRight: 15,
-    borderRadius: 10,
-    padding: 16,
-    backgroundColor: '#FF7648',
-    height: 55,
-    flexDirection: 'row',
-  },
-  buttonRaised: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 6,
-    borderColor: 'grey',
-  },
-  upperBoxText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  caloriesLeftText: {
-    color: '#8F98FF',
-    fontSize: 64,
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  upperBoxText2: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  upperBoxText3: {
-    color: '#8F98FF',
-    fontSize: 16,
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  numberContainer: {
-    display: 'flex',
-    padding: 10,
-    marginBottom: 2,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#8F98FF',
-    width: '100%',
-  },
-  text: {
-    color: 'white',
-    fontSize: 30,
-    fontWeight: 'bold',
-  },
-  completeButton: {
-    backgroundColor: '#4DC591',
-    padding: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 10,
-    borderRadius: 8,
-    height: 55,
-    width: '100%',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 6,
-    borderColor: 'grey',
-  },
-  completeButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-});
