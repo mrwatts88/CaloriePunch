@@ -58,11 +58,11 @@ type WeightHistory = {
   weight: number;
 };
 
-const tdee = 3000;
 const DEFAULT_DEFICIT = 400;
 const DEFAULT_TODAYS_CALORIES = 0;
 const DEFAULT_CALORIE_HISTORY: CalorieHistory[] = [];
 const DEFAULT_WEIGHT_HISTORY: WeightHistory[] = [];
+const DEFAULT_TDEE = 2500;
 
 const fillInCalorieHistory = (rawCalorieHistory: CalorieHistory[]) => {
   if (rawCalorieHistory.length == 0) {
@@ -163,6 +163,28 @@ const calculateTwoWeekChange = (weightHistory: WeightHistory[]) => {
   return Math.round((lastTwoWeeksAvg - twoWeeksBeforeAvg) * 10) / 10;
 };
 
+const calculateTdee = (weightHistory: WeightHistory[], calorieHistory: CalorieHistory[]) => {
+  if (weightHistory.length < 14 || calorieHistory.length < 14) {
+    return DEFAULT_TDEE;
+  }
+
+  const filledInCalorieHistory = fillInCalorieHistory(calorieHistory);
+
+  // sum the most recent 28 days of calories, not including today
+  const mostRecent28DaysNotIncludingToday = filledInCalorieHistory.slice(-29, -1);
+  const calories = mostRecent28DaysNotIncludingToday.reduce(
+    (acc, entry) => acc + entry.calories,
+    0
+  );
+
+  const twoWeekChange = calculateTwoWeekChange(weightHistory);
+  const totalCaloriesLost = twoWeekChange * 3500;
+  const totalCaloriesEaten = calories / 2; // we summed 28 days, so divide by 2 to get 14 day average
+  const totalCaloriesBurned = totalCaloriesEaten + totalCaloriesLost;
+
+  return totalCaloriesBurned / 14;
+};
+
 const exampleCalorieHistory: CalorieHistory[] = [
   { calories: 2000, date: '2021-09-01' },
   { calories: 2100, date: '2021-09-02' },
@@ -232,8 +254,6 @@ export default function HomeScreen() {
     React.useState<CalorieHistory[]>(DEFAULT_CALORIE_HISTORY);
 
   const [weightHistory, setWeightHistory] = useState<WeightHistory[]>(DEFAULT_WEIGHT_HISTORY);
-
-  const calorieGoal = tdee - deficit;
 
   useEffect(() => {
     const init = async () => {
@@ -355,6 +375,11 @@ export default function HomeScreen() {
   };
 
   const twoWeekChange = useMemo(() => calculateTwoWeekChange(weightHistory), [weightHistory]);
+  const tdee = useMemo(
+    () => calculateTdee(weightHistory, calorieHistory),
+    [weightHistory, calorieHistory]
+  );
+  const calorieGoal = tdee - deficit;
 
   const isTodaysWeightLogged = useMemo(
     () => weightHistory.at(-1) && weightHistory.at(-1)!.date === dateToDashedDateString(new Date()),
