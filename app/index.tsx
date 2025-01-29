@@ -5,7 +5,6 @@ import React, { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   Button,
-  Pressable,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -58,11 +57,11 @@ type WeightHistory = {
   weight: number;
 };
 
-const DEFAULT_DEFICIT = 400;
 const DEFAULT_TODAYS_CALORIES = 0;
 const DEFAULT_CALORIE_HISTORY: CalorieHistory[] = [];
 const DEFAULT_WEIGHT_HISTORY: WeightHistory[] = [];
 const DEFAULT_TDEE = 2500;
+const DEFAULT_WEIGHT_LOSS_GOAL = 1.0;
 
 const fillInCalorieHistory = (rawCalorieHistory: CalorieHistory[]) => {
   if (rawCalorieHistory.length == 0) {
@@ -165,6 +164,8 @@ const calculateTwoWeekChange = (weightHistory: WeightHistory[]) => {
 
 const calculateTdee = (weightHistory: WeightHistory[], calorieHistory: CalorieHistory[]) => {
   if (weightHistory.length < 14 || calorieHistory.length < 14) {
+    // if there are not 14 entries in the last 30 days for either weight or calories, return the default TDEE
+    // later this default should be calculated based on the user's gender, age, weight, and activity level
     return DEFAULT_TDEE;
   }
 
@@ -246,9 +247,10 @@ export default function HomeScreen() {
   const [debug, setDebug] = useState(false);
   const [mode, setMode] = React.useState(Mode.Calories);
   const [value, setValue] = React.useState('');
-  const [deficit, setDeficit] = React.useState(DEFAULT_DEFICIT);
   const [todaysCalories, setTodaysCalories] = React.useState(DEFAULT_TODAYS_CALORIES);
   const [areLocalStatsLoaded, setAreLocalStatsLoaded] = React.useState(false);
+  const [showSettings, setShowSettings] = React.useState(false);
+  const [weightLossGoal, setWeightLossGoal] = useState(DEFAULT_WEIGHT_LOSS_GOAL);
 
   const [calorieHistory, setCalorieHistory] =
     React.useState<CalorieHistory[]>(DEFAULT_CALORIE_HISTORY);
@@ -257,12 +259,11 @@ export default function HomeScreen() {
 
   useEffect(() => {
     const init = async () => {
-      const deficit = await getData('deficit');
       const localTodaysCalories = await getData('todaysCalories');
       const localCalorieHistory = await getData('calorieHistory');
       const localWeightHistory = await getData('weightHistory');
+      const localWeightLossGoal = await getData('weightLossGoal');
 
-      setDeficit(deficit ? parseInt(deficit) : DEFAULT_DEFICIT);
       setTodaysCalories(
         localTodaysCalories ? parseInt(localTodaysCalories) : DEFAULT_TODAYS_CALORIES
       );
@@ -271,6 +272,9 @@ export default function HomeScreen() {
       );
       setWeightHistory(
         localWeightHistory ? JSON.parse(localWeightHistory) : DEFAULT_WEIGHT_HISTORY
+      );
+      setWeightLossGoal(
+        localWeightLossGoal ? parseFloat(localWeightLossGoal) : DEFAULT_WEIGHT_LOSS_GOAL
       );
       setAreLocalStatsLoaded(true);
     };
@@ -281,11 +285,11 @@ export default function HomeScreen() {
   useEffect(() => {
     if (!areLocalStatsLoaded) return;
 
-    storeData('deficit', deficit.toString());
     storeData('todaysCalories', todaysCalories.toString());
     storeData('calorieHistory', JSON.stringify(calorieHistory));
     storeData('weightHistory', JSON.stringify(weightHistory));
-  }, [deficit, todaysCalories, calorieHistory, weightHistory, areLocalStatsLoaded]);
+    storeData('weightLossGoal', weightLossGoal.toString());
+  }, [todaysCalories, calorieHistory, weightHistory, weightLossGoal, areLocalStatsLoaded]);
 
   const handleSubmitCalories = (calories: string) => {
     setTodaysCalories((prev) => prev + parseInt(calories));
@@ -319,7 +323,7 @@ export default function HomeScreen() {
       ];
     }
 
-    setWeightHistory(updatedWeightHistory.slice(-30));
+    setWeightHistory(updatedWeightHistory.slice(-30)); // todo: cut off entries older than 30 days
   };
 
   const handleValueChange = (changedValue: string) => {
@@ -342,9 +346,6 @@ export default function HomeScreen() {
   };
 
   const handleCompleteDay = () => {
-    // AsyncStorage.removeItem('calorieHistory');
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-
     const existingToday = calorieHistory.find(
       (entry) => entry.date === dateToDashedDateString(new Date())
     );
@@ -370,7 +371,7 @@ export default function HomeScreen() {
       ];
     }
 
-    setCalorieHistory(updatedCalorieHistory.slice(-30));
+    setCalorieHistory(updatedCalorieHistory.slice(-30)); // todo: cut off entries older than 30 days
     setTodaysCalories(0);
   };
 
@@ -379,6 +380,7 @@ export default function HomeScreen() {
     () => calculateTdee(weightHistory, calorieHistory),
     [weightHistory, calorieHistory]
   );
+  const deficit = useMemo(() => (weightLossGoal * 3500) / 7, [weightLossGoal]);
   const calorieGoal = tdee - deficit;
 
   const isTodaysWeightLogged = useMemo(
@@ -392,68 +394,16 @@ export default function HomeScreen() {
     }
   }, [isTodaysWeightLogged]);
 
-  return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.upperContainer}>
-        <TouchableOpacity
-          disabled={isTodaysWeightLogged}
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-            if (mode === Mode.Weight) {
-              setMode(Mode.Calories);
-            } else {
-              setMode(Mode.Weight);
-            }
-          }}
-          style={[styles.weightBox, isTodaysWeightLogged ? '' : styles.buttonRaised]}
-        >
-          {!isTodaysWeightLogged && mode !== Mode.Weight && (
-            <View
-              style={{
-                position: 'absolute',
-                width: 15,
-                height: 15,
-                top: -5,
-                right: -5,
-                borderRadius: 100,
-                borderWidth: 1,
-                borderColor: 'grey',
-                backgroundColor: 'red',
-              }}
-            />
-          )}
-          <View>
-            {isTodaysWeightLogged ? (
-              <>
-                <Text style={styles.upperBoxText2}>2 Wk Weight Change</Text>
-                <Text style={styles.upperBoxText}>
-                  {twoWeekChange > 0 ? '+' : ''}
-                  {twoWeekChange} lbs
-                </Text>
-              </>
-            ) : (
-              <Text style={styles.upperBoxText}>
-                {mode === Mode.Weight ? (
-                  <Icon name="arrow-back" size={20} color="white" />
-                ) : (
-                  <Text>Enter Today's Weight</Text>
-                )}
-              </Text>
-            )}
-          </View>
-        </TouchableOpacity>
-        <Pressable
-          onLongPress={() => {
-            setDebug((prev) => !prev);
-          }}
-          style={[styles.calorieBox]}
-        >
-          <Text style={styles.upperBoxText3}>Calories Left Today</Text>
-          <Text style={[styles.caloriesLeftText]}>{calorieGoal - todaysCalories}</Text>
-        </Pressable>
-      </View>
-      {debug ? (
-        <ScrollView>
+  if (debug) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <ScrollView style={{ width: '100%' }}>
+          <Button
+            title="Back"
+            onPress={() => {
+              setDebug(false);
+            }}
+          />
           <Button
             title="Reset"
             onPress={() => {
@@ -462,84 +412,203 @@ export default function HomeScreen() {
               // setCalorieHistory(exampleCalorieHistory);
             }}
           />
-          <Text>TDEE: {tdee}</Text>
-          <Text>Deficit: {deficit}</Text>
+          <Text>TDEE: {tdee} cals/day</Text>
+          <Text>Weight Loss Goal: {weightLossGoal} lbs/wk</Text>
+          <Text>Deficit: {deficit} cals/day</Text>
+          <Text>Goal: {tdee - deficit} cals/day</Text>
           <Text>Today Cals: {todaysCalories}</Text>
-          <Text>Weight History:</Text>
+          <Text>Calories Left: {calorieGoal - todaysCalories}</Text>
+          <Text />
+          <Text style={{ fontWeight: 'bold' }}>Weight History:</Text>
           {weightHistory.map((ch) => {
             return <Text key={ch.date}>{JSON.stringify(ch)}</Text>;
           })}
-          <Text>Filled in Weight History:</Text>
+          <Text />
+          <Text
+            style={{
+              fontWeight: 'bold',
+            }}
+          >
+            Filled in Weight History:
+          </Text>
           {fillInWeightHistory(weightHistory).map((ch) => {
             return <Text key={ch.date}>{JSON.stringify(ch)}</Text>;
           })}
-          <Text>Calorie History:</Text>
+          <Text />
+          <Text
+            style={{
+              fontWeight: 'bold',
+            }}
+          >
+            Calorie History:
+          </Text>
           {calorieHistory.map((ch) => {
             return <Text key={ch.date}>{JSON.stringify(ch)}</Text>;
           })}
-          <Text>Filled in Calorie History:</Text>
+          <Text />
+          <Text
+            style={{
+              fontWeight: 'bold',
+            }}
+          >
+            Filled in Calorie History:
+          </Text>
           {fillInCalorieHistory(calorieHistory).map((ch) => {
             return <Text key={ch.date}>{JSON.stringify(ch)}</Text>;
           })}
         </ScrollView>
-      ) : (
-        <>
-          <View
-            style={{
-              borderRadius: 10,
-              justifyContent: 'center',
-              alignItems: 'center',
-              overflow: 'hidden',
-              width: '100%',
+      </SafeAreaView>
+    );
+  }
+
+  if (showSettings) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <SettingsPage
+          close={() => setShowSettings(false)}
+          updateWeightLossGoal={setWeightLossGoal}
+          weightLossGoal={weightLossGoal}
+        />
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <View style={styles.upperContainer}>
+        <View
+          style={{
+            display: 'flex',
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            width: '100%',
+          }}
+        >
+          <TouchableOpacity
+            disabled={isTodaysWeightLogged}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              if (mode === Mode.Weight) {
+                setMode(Mode.Calories);
+              } else {
+                setMode(Mode.Weight);
+              }
             }}
+            style={[styles.weightBox, isTodaysWeightLogged ? '' : styles.buttonRaised]}
           >
-            <View
-              style={[
-                styles.numberContainer,
-                mode === Mode.Weight
-                  ? { backgroundColor: '#FF7648' }
-                  : { backgroundColor: '#8F98FF' },
-              ]}
-            >
-              {value ? (
-                <Text style={styles.text}>{value}</Text>
+            {!isTodaysWeightLogged && mode !== Mode.Weight && (
+              <View
+                style={{
+                  position: 'absolute',
+                  width: 15,
+                  height: 15,
+                  top: -5,
+                  right: -5,
+                  borderRadius: 100,
+                  borderWidth: 1,
+                  borderColor: 'grey',
+                  backgroundColor: 'red',
+                }}
+              />
+            )}
+            <View>
+              {isTodaysWeightLogged ? (
+                <>
+                  <Text style={styles.upperBoxText2}>2 Wk Weight Change</Text>
+                  <Text style={styles.upperBoxText}>
+                    {twoWeekChange > 0 ? '+' : ''}
+                    {twoWeekChange} lbs
+                  </Text>
+                </>
               ) : (
-                <Text
-                  style={[
-                    styles.text,
-                    {
-                      opacity: 0.5,
-                    },
-                  ]}
-                >
-                  {mode === Mode.Calories ? 'Calories' : 'Weight'}
+                <Text style={styles.upperBoxText}>
+                  {mode === Mode.Weight ? (
+                    <Icon name="arrow-back" size={20} color="white" />
+                  ) : (
+                    <Text>Enter Today's Weight</Text>
+                  )}
                 </Text>
               )}
             </View>
-            {mode === Mode.Calories ? (
-              <CaloriesKeyboard onSubmit={handleSubmitCalories} onValueChange={handleValueChange} />
-            ) : (
-              <WeightKeyboard onSubmit={handleSubmitWeight} onValueChange={handleValueChange} />
-            )}
-          </View>
+          </TouchableOpacity>
           <TouchableOpacity
-            disabled={mode !== Mode.Calories}
-            onPress={showCompleteDayDialog}
-            style={styles.completeButton}
+            onLongPress={() => {
+              setDebug((prev) => !prev);
+            }}
+            onPress={() => {
+              setShowSettings(true);
+            }}
+            style={{
+              height: 55,
+              width: 55,
+              borderRadius: 10,
+              justifyContent: 'center',
+              alignItems: 'center',
+              borderWidth: 2,
+              borderColor: '#FF7648',
+            }}
           >
+            <Icon name="settings" size={30} color="black" />
+          </TouchableOpacity>
+        </View>
+        <View style={[styles.calorieBox]}>
+          <Text style={styles.upperBoxText3}>Calories Left Today</Text>
+          <Text style={[styles.caloriesLeftText]}>{calorieGoal - todaysCalories}</Text>
+        </View>
+      </View>
+      <View
+        style={{
+          borderRadius: 10,
+          justifyContent: 'center',
+          alignItems: 'center',
+          overflow: 'hidden',
+          width: '100%',
+        }}
+      >
+        <View
+          style={[
+            styles.numberContainer,
+            mode === Mode.Weight ? { backgroundColor: '#FF7648' } : { backgroundColor: '#8F98FF' },
+          ]}
+        >
+          {value ? (
+            <Text style={styles.text}>{value}</Text>
+          ) : (
             <Text
               style={[
-                styles.completeButtonText,
+                styles.text,
                 {
-                  opacity: mode === Mode.Calories ? 1 : 0.4,
+                  opacity: 0.5,
                 },
               ]}
             >
-              Complete Day
+              {mode === Mode.Calories ? 'Calories' : 'Weight'}
             </Text>
-          </TouchableOpacity>
-        </>
-      )}
+          )}
+        </View>
+        {mode === Mode.Calories ? (
+          <CaloriesKeyboard onSubmit={handleSubmitCalories} onValueChange={handleValueChange} />
+        ) : (
+          <WeightKeyboard onSubmit={handleSubmitWeight} onValueChange={handleValueChange} />
+        )}
+      </View>
+      <TouchableOpacity
+        disabled={mode !== Mode.Calories}
+        onPress={showCompleteDayDialog}
+        style={styles.completeButton}
+      >
+        <Text
+          style={[
+            styles.completeButtonText,
+            {
+              opacity: mode === Mode.Calories ? 1 : 0.4,
+            },
+          ]}
+        >
+          Complete Day
+        </Text>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 }
@@ -571,7 +640,8 @@ const styles = StyleSheet.create({
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 10,
+    flex: 1,
+    marginRight: 15,
     borderRadius: 10,
     padding: 16,
     backgroundColor: '#FF7648',
@@ -584,7 +654,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 4,
     elevation: 6,
-    // borderWidth: 1,
     borderColor: 'grey',
   },
   upperBoxText: {
@@ -639,7 +708,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 4,
     elevation: 6,
-    // borderWidth: 1,
     borderColor: 'grey',
   },
   completeButtonText: {
@@ -649,3 +717,102 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
+
+type SettingsPageProps = {
+  close: () => void;
+  updateWeightLossGoal: (goal: number) => void;
+  weightLossGoal: number;
+};
+
+const SettingsPage = ({ close, updateWeightLossGoal, weightLossGoal }: SettingsPageProps) => {
+  return (
+    <View style={{ flex: 1, alignItems: 'center' }}>
+      <Text
+        style={{
+          fontSize: 24,
+          marginVertical: 10,
+        }}
+      >
+        Settings
+      </Text>
+      <Text
+        style={{
+          marginVertical: 10,
+        }}
+      >
+        Weight Loss Goal (lbs/week)
+      </Text>
+      <View
+        style={{
+          display: 'flex',
+          flexDirection: 'row',
+          marginBottom: 10,
+        }}
+      >
+        <TouchableOpacity
+          onPress={() => {
+            updateWeightLossGoal(0.25);
+          }}
+          style={{
+            backgroundColor: weightLossGoal === 0.25 ? 'grey' : 'lightgrey',
+            padding: 10,
+            borderTopLeftRadius: 10,
+            borderBottomLeftRadius: 10,
+            width: 50,
+            borderRightWidth: 1,
+            borderRightColor: 'white',
+          }}
+        >
+          <Text
+            style={{
+              textAlign: 'center',
+            }}
+          >
+            0.25
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => {
+            updateWeightLossGoal(0.5);
+          }}
+          style={{
+            backgroundColor: weightLossGoal === 0.5 ? 'grey' : 'lightgrey',
+            padding: 10,
+            width: 50,
+          }}
+        >
+          <Text
+            style={{
+              textAlign: 'center',
+            }}
+          >
+            0.5
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => {
+            updateWeightLossGoal(1.0);
+          }}
+          style={{
+            backgroundColor: weightLossGoal === 1.0 ? 'grey' : 'lightgrey',
+            padding: 10,
+            borderTopRightRadius: 10,
+            borderBottomRightRadius: 10,
+            width: 50,
+            borderLeftWidth: 1,
+            borderLeftColor: 'white',
+          }}
+        >
+          <Text
+            style={{
+              textAlign: 'center',
+            }}
+          >
+            1
+          </Text>
+        </TouchableOpacity>
+      </View>
+      <Button title="Close" onPress={close} />
+    </View>
+  );
+};
