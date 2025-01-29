@@ -319,7 +319,7 @@ export default function HomeScreen() {
       ];
     }
 
-    setWeightHistory(updatedWeightHistory);
+    setWeightHistory(updatedWeightHistory.slice(-30));
   };
 
   const handleValueChange = (changedValue: string) => {
@@ -370,7 +370,7 @@ export default function HomeScreen() {
       ];
     }
 
-    setCalorieHistory(updatedCalorieHistory);
+    setCalorieHistory(updatedCalorieHistory.slice(-30));
     setTodaysCalories(0);
   };
 
