@@ -1,3 +1,4 @@
+import { AppContainer } from '@/components/AppContainer';
 import { Debug } from '@/components/Debug';
 import { CaloriesKeyboard, WeightKeyboard } from '@/components/keyboard';
 import { SettingsPage } from '@/components/Settings';
@@ -16,7 +17,7 @@ import {
 } from '@/utils/calories';
 import * as Haptics from 'expo-haptics';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Alert, SafeAreaView, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Text, TouchableOpacity, View } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 
 enum Mode {
@@ -198,7 +199,7 @@ export default function HomeScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 justify-end items-center mx-5">
+    <AppContainer>
       <View className="w-full flex flex-col flex-1 min-h-[200px]">
         <View className="flex flex-row justify-between items-center w-full">
           <TouchableOpacity
@@ -250,9 +251,11 @@ export default function HomeScreen() {
             <Icon name="settings" size={30} color="black" />
           </TouchableOpacity>
         </View>
-        <View className="flex rounded-lg p-4 flex-1 justify-center items-center mb-2">
-          <Text className="text-[#8F98FF] text-lg font-bold text-center">Calories Left Today</Text>
-          <Text className="text-[#8F98FF] text-6xl font-bold text-center">
+        <View className="flex rounded-lg p-4 flex-1 justify-center items-center">
+          <Text className="text-[#8F98FF] text-xl mb-1 font-bold text-center">
+            Calories Left Today
+          </Text>
+          <Text className="text-[#8F98FF] text-9xl font-bold text-center">
             {calorieGoal - todaysCalories}
           </Text>
         </View>
@@ -286,6 +289,6 @@ export default function HomeScreen() {
           Complete Day
         </Text>
       </TouchableOpacity>
-    </SafeAreaView>
+    </AppContainer>
   );
 }
