@@ -1,20 +1,5 @@
+import { CalorieHistory, DEFAULT_TDEE, WeightHistory } from '@/context/WeightLossContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-export type CalorieHistory = {
-  calories: number;
-  date: string;
-};
-
-export type WeightHistory = {
-  date: string;
-  weight: number;
-};
-
-export const DEFAULT_TODAYS_CALORIES = 0;
-export const DEFAULT_CALORIE_HISTORY: CalorieHistory[] = [];
-export const DEFAULT_WEIGHT_HISTORY: WeightHistory[] = [];
-export const DEFAULT_TDEE = 2500;
-export const DEFAULT_WEIGHT_LOSS_GOAL = 1.0;
 
 export const dateToDashedDateString = (date: Date) => {
   const options = {

@@ -1,45 +1,29 @@
-import {
-  CalorieHistory,
-  fillInCalorieHistory,
-  fillInWeightHistory,
-  WeightHistory,
-} from '@/utils/calories';
+import { useWeightLoss } from '@/context/WeightLossContext';
+import { fillInCalorieHistory, fillInWeightHistory } from '@/utils/calories';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React from 'react';
 import { Button, ScrollView, Text } from 'react-native';
 import { AppContainer } from './AppContainer';
 
-type DebugProps = {
-  close: () => void;
-  tdee: number;
-  weightLossGoal: number;
-  deficit: number;
-  todaysCalories: number;
-  calorieGoal: number;
-  weightHistory: WeightHistory[];
-  calorieHistory: CalorieHistory[];
-};
-
-export const Debug = ({
-  close,
-  tdee,
-  weightLossGoal,
-  deficit,
-  todaysCalories,
-  calorieGoal,
-  weightHistory,
-  calorieHistory,
-}: DebugProps) => {
+export const Debug = () => {
+  const {
+    todaysCalories,
+    weightLossGoal,
+    calorieHistory,
+    weightHistory,
+    tdee,
+    deficit,
+    calorieGoal,
+    setDebug,
+  } = useWeightLoss();
   return (
     <AppContainer>
       <ScrollView className="w-full">
-        <Button title="Back" onPress={close} />
+        <Button title="Back" onPress={() => setDebug(false)} />
         <Button
           title="Reset"
           onPress={() => {
             AsyncStorage.clear();
-            // setWeightHistory(exampleWeightHistory);
-            // setCalorieHistory(exampleCalorieHistory);
           }}
         />
         <Text className="font-bold">TDEE: {tdee} cals/day</Text>

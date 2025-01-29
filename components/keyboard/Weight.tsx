@@ -1,3 +1,4 @@
+import { useWeightLoss } from '@/context/WeightLossContext';
 import * as Haptics from 'expo-haptics';
 import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
@@ -7,11 +8,6 @@ type ButtonProps = {
   title: string;
   onPress: () => void;
   isEnd?: boolean;
-};
-
-type KeyboardProps = {
-  onSubmit?: (value: string) => void;
-  onValueChange?: (value: string) => void;
 };
 
 const Button: React.FC<ButtonProps> = ({ title, onPress, isEnd }) => (
@@ -45,7 +41,8 @@ const WideButton: React.FC<ButtonProps> = ({ onPress }) => (
   </TouchableOpacity>
 );
 
-export const WeightKeyboard: React.FC<KeyboardProps> = ({ onSubmit, onValueChange }) => {
+export const WeightKeyboard: React.FC = () => {
+  const { handleValueChange, handleSubmitWeight } = useWeightLoss();
   const [value, setValue] = React.useState('');
   const maxLength = 4;
 
@@ -67,7 +64,7 @@ export const WeightKeyboard: React.FC<KeyboardProps> = ({ onSubmit, onValueChang
         valueWithDecimalBeforeLastDigit = valueWithDecimalBeforeLastDigit + '0';
       }
 
-      onSubmit?.(valueWithDecimalBeforeLastDigit);
+      handleSubmitWeight(valueWithDecimalBeforeLastDigit);
       setValue('');
     } else {
       setValue((prev) => {
@@ -95,7 +92,7 @@ export const WeightKeyboard: React.FC<KeyboardProps> = ({ onSubmit, onValueChang
       valueWithDecimalBeforeLastDigit = valueWithDecimalBeforeLastDigit + '0';
     }
 
-    onValueChange?.(valueWithDecimalBeforeLastDigit);
+    handleValueChange(valueWithDecimalBeforeLastDigit);
   }, [value]);
 
   const rows = [

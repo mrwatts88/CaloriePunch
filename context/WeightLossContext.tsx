@@ -1,48 +1,59 @@
 import {
   calculateTdee,
   calculateTwoWeekChange,
-  CalorieHistory,
   dateToDashedDateString,
-  DEFAULT_CALORIE_HISTORY,
-  DEFAULT_TODAYS_CALORIES,
-  DEFAULT_WEIGHT_HISTORY,
-  DEFAULT_WEIGHT_LOSS_GOAL,
   getData,
   storeData,
-  WeightHistory,
 } from '@/utils/calories';
 import * as Haptics from 'expo-haptics';
 import React, { createContext, ReactNode, useContext, useEffect, useMemo, useState } from 'react';
 import { Alert } from 'react-native';
 
+const DEFAULT_TODAYS_CALORIES = 0;
+const DEFAULT_CALORIE_HISTORY: CalorieHistory[] = [];
+const DEFAULT_WEIGHT_HISTORY: WeightHistory[] = [];
+const DEFAULT_WEIGHT_LOSS_GOAL = 1.0;
+
+export const DEFAULT_TDEE = 2500;
+
+export enum Mode {
+  Calories = 'calories',
+  Weight = 'weight',
+}
+
+export type CalorieHistory = {
+  calories: number;
+  date: string;
+};
+
+export type WeightHistory = {
+  date: string;
+  weight: number;
+};
+
 interface WeightLossContextType {
   debug: boolean;
-  setDebug: React.Dispatch<React.SetStateAction<boolean>>;
   mode: string;
-  setMode: React.Dispatch<React.SetStateAction<string>>;
   value: string;
-  setValue: React.Dispatch<React.SetStateAction<string>>;
   todaysCalories: number;
-  setTodaysCalories: React.Dispatch<React.SetStateAction<number>>;
   showSettings: boolean;
-  setShowSettings: React.Dispatch<React.SetStateAction<boolean>>;
   weightLossGoal: number;
-  setWeightLossGoal: React.Dispatch<React.SetStateAction<number>>;
   calorieHistory: CalorieHistory[];
-  setCalorieHistory: React.Dispatch<React.SetStateAction<CalorieHistory[]>>;
   weightHistory: WeightHistory[];
-  setWeightHistory: React.Dispatch<React.SetStateAction<WeightHistory[]>>;
-  areLocalStatsLoaded: boolean;
-  handleSubmitCalories: (calories: string) => void;
-  handleSubmitWeight: (weight: string) => void;
-  handleValueChange: (changedValue: string) => void;
-  showCompleteDayDialog: () => void;
-  handleCompleteDay: () => void;
   twoWeekChange: number;
   tdee: number;
   deficit: number;
   calorieGoal: number;
   isTodaysWeightLogged: boolean;
+  setDebug: React.Dispatch<React.SetStateAction<boolean>>;
+  setMode: React.Dispatch<React.SetStateAction<string>>;
+  setValue: React.Dispatch<React.SetStateAction<string>>;
+  setWeightLossGoal: React.Dispatch<React.SetStateAction<number>>;
+  setShowSettings: React.Dispatch<React.SetStateAction<boolean>>;
+  handleSubmitCalories: (calories: string) => void;
+  handleSubmitWeight: (weight: string) => void;
+  handleValueChange: (changedValue: string) => void;
+  showCompleteDayDialog: () => void;
 }
 
 interface WeightLossProviderProps {
@@ -204,32 +215,27 @@ export const WeightLossProvider = ({ children }: WeightLossProviderProps) => {
     <WeightLossContext.Provider
       value={{
         debug,
-        setDebug,
         mode,
-        setMode,
         value,
-        setValue,
         todaysCalories,
-        setTodaysCalories,
         showSettings,
-        setShowSettings,
         weightLossGoal,
-        setWeightLossGoal,
         calorieHistory,
-        setCalorieHistory,
         weightHistory,
-        setWeightHistory,
-        areLocalStatsLoaded,
-        handleSubmitCalories,
-        handleSubmitWeight,
-        handleValueChange,
-        showCompleteDayDialog,
-        handleCompleteDay,
         twoWeekChange,
         tdee,
         deficit,
         calorieGoal,
         isTodaysWeightLogged,
+        handleSubmitCalories,
+        handleSubmitWeight,
+        handleValueChange,
+        showCompleteDayDialog,
+        setMode,
+        setValue,
+        setDebug,
+        setShowSettings,
+        setWeightLossGoal,
       }}
     >
       {children}

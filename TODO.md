@@ -1,0 +1,2 @@
+- Ability to edit today's weight
+- Store gender, age, initial weight, activity level

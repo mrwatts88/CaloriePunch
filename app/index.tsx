@@ -1,72 +1,35 @@
 import { AppContainer } from '@/components/AppContainer';
 import { Debug } from '@/components/Debug';
 import { CaloriesKeyboard, WeightKeyboard } from '@/components/keyboard';
-import { SettingsPage } from '@/components/Settings';
-import { useWeightLoss, WeightLossProvider } from '@/context/WeightLossContext';
+import { Settings } from '@/components/Settings';
+import { Mode, useWeightLoss } from '@/context/WeightLossContext';
 import * as Haptics from 'expo-haptics';
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 
-enum Mode {
-  Calories = 'calories',
-  Weight = 'weight',
-}
-
-const HomeScreen = () => {
+export default function () {
   const {
     debug,
     setDebug,
     mode,
     setMode,
     value,
-    handleValueChange,
     showSettings,
     setShowSettings,
     todaysCalories,
-    handleSubmitCalories,
-    weightLossGoal,
-    setWeightLossGoal,
-    calorieHistory,
-    handleSubmitWeight,
-    weightHistory,
     showCompleteDayDialog,
     twoWeekChange,
-    tdee,
-    deficit,
     calorieGoal,
     isTodaysWeightLogged,
   } = useWeightLoss();
 
-  useEffect(() => {
-    if (isTodaysWeightLogged) {
-      setMode(Mode.Calories);
-    }
-  }, [isTodaysWeightLogged]);
-
   if (debug) {
-    return (
-      <Debug
-        close={() => setDebug(false)}
-        tdee={tdee}
-        weightLossGoal={weightLossGoal}
-        deficit={deficit}
-        todaysCalories={todaysCalories}
-        calorieGoal={calorieGoal}
-        weightHistory={weightHistory}
-        calorieHistory={calorieHistory}
-      />
-    );
+    return <Debug />;
   }
 
   if (showSettings) {
-    return (
-      <SettingsPage
-        close={() => setShowSettings(false)}
-        updateWeightLossGoal={setWeightLossGoal}
-        weightLossGoal={weightLossGoal}
-      />
-    );
+    return <Settings />;
   }
 
   return (
@@ -143,11 +106,7 @@ const HomeScreen = () => {
             </Text>
           )}
         </View>
-        {mode === Mode.Calories ? (
-          <CaloriesKeyboard onSubmit={handleSubmitCalories} onValueChange={handleValueChange} />
-        ) : (
-          <WeightKeyboard onSubmit={handleSubmitWeight} onValueChange={handleValueChange} />
-        )}
+        {mode === Mode.Calories ? <CaloriesKeyboard /> : <WeightKeyboard />}
       </View>
       <TouchableOpacity
         disabled={mode !== Mode.Calories}
@@ -161,13 +120,5 @@ const HomeScreen = () => {
         </Text>
       </TouchableOpacity>
     </AppContainer>
-  );
-};
-
-export default function App() {
-  return (
-    <WeightLossProvider>
-      <HomeScreen />
-    </WeightLossProvider>
   );
 }

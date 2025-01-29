@@ -1,3 +1,4 @@
+import { useWeightLoss } from '@/context/WeightLossContext';
 import * as Haptics from 'expo-haptics';
 import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
@@ -9,12 +10,6 @@ type ButtonProps = {
   onPress: () => void;
   isEnd?: boolean;
 };
-
-type KeyboardProps = {
-  onSubmit?: (value: string) => void;
-  onValueChange?: (value: string) => void;
-};
-
 const Button: React.FC<ButtonProps> = ({ title, onPress, isEnd }) => (
   <TouchableOpacity
     className={`flex-1 h-[60px] justify-center items-center mb-0.5 ${isEnd ? '' : 'mr-0.5'} ${
@@ -47,7 +42,8 @@ const WideButton: React.FC<ButtonProps> = ({ onPress }) => (
   </TouchableOpacity>
 );
 
-export const CaloriesKeyboard: React.FC<KeyboardProps> = ({ onSubmit, onValueChange }) => {
+export const CaloriesKeyboard: React.FC = () => {
+  const { handleValueChange, handleSubmitCalories } = useWeightLoss();
   const [value, setValue] = React.useState('');
   const [isNegative, setIsNegative] = React.useState(false);
 
@@ -59,7 +55,7 @@ export const CaloriesKeyboard: React.FC<KeyboardProps> = ({ onSubmit, onValueCha
     } else if (key === 'submit') {
       const valueToSubmit = value || '0';
       const finalValue = isNegative && valueToSubmit !== '0' ? `-${valueToSubmit}` : valueToSubmit;
-      onSubmit?.(finalValue);
+      handleSubmitCalories(finalValue);
       setValue('');
       setIsNegative(false);
     } else if (key === 'plusminus') {
@@ -91,7 +87,7 @@ export const CaloriesKeyboard: React.FC<KeyboardProps> = ({ onSubmit, onValueCha
 
   const finalValue = isNegative && value ? `-${value}` : value;
   React.useEffect(() => {
-    onValueChange?.(finalValue);
+    handleValueChange(finalValue);
   }, [finalValue]);
 
   const rows = [
