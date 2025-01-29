@@ -1,15 +1,6 @@
 import { ReactNode } from 'react';
-import { SafeAreaView, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native';
 
 export const AppContainer = ({ children }: { children: ReactNode }) => {
-  return <SafeAreaView style={styles.container}>{children}</SafeAreaView>;
+  return <SafeAreaView className="flex-1 justify-end items-center mx-5">{children}</SafeAreaView>;
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-    marginHorizontal: 20,
-  },
-});

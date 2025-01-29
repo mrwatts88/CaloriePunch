@@ -1,6 +1,6 @@
 import * as Haptics from 'expo-haptics';
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Text, TouchableOpacity, View } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import McIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 
@@ -17,13 +17,9 @@ type KeyboardProps = {
 
 const Button: React.FC<ButtonProps> = ({ title, onPress, isEnd }) => (
   <TouchableOpacity
-    style={[
-      styles.button,
-      {
-        backgroundColor: ['back', 'plusminus'].includes(title) ? '#8F98FF' : '#4DC591',
-        marginRight: isEnd ? 0 : 2,
-      },
-    ]}
+    className={`flex-1 h-[60px] justify-center items-center mb-0.5 ${isEnd ? '' : 'mr-0.5'} ${
+      ['back', 'plusminus'].includes(title) ? 'bg-[#8F98FF]' : 'bg-[#4DC591]'
+    }`}
     onPress={() => {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       onPress();
@@ -34,19 +30,14 @@ const Button: React.FC<ButtonProps> = ({ title, onPress, isEnd }) => (
     ) : title === 'plusminus' ? (
       <McIcon name="plus-minus" size={30} color="white" />
     ) : (
-      <Text style={styles.buttonText}>{title}</Text>
+      <Text className="text-white text-2xl font-bold">{title}</Text>
     )}
   </TouchableOpacity>
 );
 
 const WideButton: React.FC<ButtonProps> = ({ onPress }) => (
   <TouchableOpacity
-    style={[
-      styles.wideButton,
-      {
-        backgroundColor: '#8F98FF',
-      },
-    ]}
+    className="h-[60px] justify-center items-center bg-[#8F98FF]"
     onPress={() => {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       onPress();
@@ -111,9 +102,9 @@ export const CaloriesKeyboard: React.FC<KeyboardProps> = ({ onSubmit, onValueCha
   ];
 
   return (
-    <View style={styles.container}>
+    <View className="w-full max-w-[400px]">
       {rows.map((row, rowIndex) => (
-        <View key={rowIndex} style={styles.row}>
+        <View key={rowIndex} className="flex-row w-full">
           {row.map((button, idx) => (
             <Button
               key={button.toString()}
@@ -128,33 +119,3 @@ export const CaloriesKeyboard: React.FC<KeyboardProps> = ({ onSubmit, onValueCha
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    width: '100%',
-    maxWidth: 400,
-  },
-  button: {
-    marginRight: 2,
-    marginBottom: 2,
-    flex: 1,
-    height: 60,
-    backgroundColor: '#4DC591',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  wideButton: {
-    height: 60,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: 'white',
-    fontSize: 30,
-    fontWeight: 'bold',
-  },
-  row: {
-    flexDirection: 'row',
-    width: '100%',
-  },
-});

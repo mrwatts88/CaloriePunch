@@ -29,11 +29,11 @@ export default function HomeScreen() {
   const [mode, setMode] = useState(Mode.Calories);
   const [value, setValue] = useState('');
   const [todaysCalories, setTodaysCalories] = useState(DEFAULT_TODAYS_CALORIES);
-  const [areLocalStatsLoaded, setAreLocalStatsLoaded] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [weightLossGoal, setWeightLossGoal] = useState(DEFAULT_WEIGHT_LOSS_GOAL);
   const [calorieHistory, setCalorieHistory] = useState<CalorieHistory[]>(DEFAULT_CALORIE_HISTORY);
   const [weightHistory, setWeightHistory] = useState<WeightHistory[]>(DEFAULT_WEIGHT_HISTORY);
+  const [areLocalStatsLoaded, setAreLocalStatsLoaded] = useState(false);
 
   useEffect(() => {
     const init = async () => {
@@ -202,7 +202,7 @@ export default function HomeScreen() {
       <View className="w-full flex flex-col flex-1 min-h-[200px]">
         <View className="flex flex-row justify-between items-center w-full">
           <TouchableOpacity
-            // disabled={isTodaysWeightLogged}
+            disabled={isTodaysWeightLogged}
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
               if (mode === Mode.Weight) {

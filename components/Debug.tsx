@@ -32,7 +32,7 @@ export const Debug = ({
 }: DebugProps) => {
   return (
     <AppContainer>
-      <ScrollView style={{ width: '100%' }}>
+      <ScrollView className="w-full">
         <Button title="Back" onPress={close} />
         <Button
           title="Reset"
@@ -42,47 +42,25 @@ export const Debug = ({
             // setCalorieHistory(exampleCalorieHistory);
           }}
         />
-        <Text>TDEE: {tdee} cals/day</Text>
-        <Text>Weight Loss Goal: {weightLossGoal} lbs/wk</Text>
-        <Text>Deficit: {deficit} cals/day</Text>
-        <Text>Goal: {tdee - deficit} cals/day</Text>
-        <Text>Today Cals: {todaysCalories}</Text>
-        <Text>Calories Left: {calorieGoal - todaysCalories}</Text>
-        <Text />
-        <Text style={{ fontWeight: 'bold' }}>Weight History:</Text>
+        <Text className="font-bold">TDEE: {tdee} cals/day</Text>
+        <Text className="font-bold">Weight Loss Goal: {weightLossGoal} lbs/wk</Text>
+        <Text className="font-bold">Deficit: {deficit} cals/day</Text>
+        <Text className="font-bold">Goal: {tdee - deficit} cals/day</Text>
+        <Text className="font-bold">Today Cals: {todaysCalories}</Text>
+        <Text className="font-bold">Calories Left: {calorieGoal - todaysCalories}</Text>
+        <Text className="font-bold mt-4">Weight History:</Text>
         {weightHistory.map((ch) => {
           return <Text key={ch.date}>{JSON.stringify(ch)}</Text>;
         })}
-        <Text />
-        <Text
-          style={{
-            fontWeight: 'bold',
-          }}
-        >
-          Filled in Weight History:
-        </Text>
+        <Text className="font-bold mt-4">Filled in Weight History:</Text>
         {fillInWeightHistory(weightHistory).map((ch) => {
           return <Text key={ch.date}>{JSON.stringify(ch)}</Text>;
         })}
-        <Text />
-        <Text
-          style={{
-            fontWeight: 'bold',
-          }}
-        >
-          Calorie History:
-        </Text>
+        <Text className="font-bold mt-4">Calorie History:</Text>
         {calorieHistory.map((ch) => {
           return <Text key={ch.date}>{JSON.stringify(ch)}</Text>;
         })}
-        <Text />
-        <Text
-          style={{
-            fontWeight: 'bold',
-          }}
-        >
-          Filled in Calorie History:
-        </Text>
+        <Text className="font-bold mt-4">Filled in Calorie History:</Text>
         {fillInCalorieHistory(calorieHistory).map((ch) => {
           return <Text key={ch.date}>{JSON.stringify(ch)}</Text>;
         })}

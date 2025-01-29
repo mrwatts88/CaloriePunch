@@ -1,6 +1,6 @@
 import * as Haptics from 'expo-haptics';
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Text, TouchableOpacity, View } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 
 type ButtonProps = {
@@ -17,13 +17,9 @@ type KeyboardProps = {
 const Button: React.FC<ButtonProps> = ({ title, onPress, isEnd }) => (
   <TouchableOpacity
     disabled={title === 'skip'}
-    style={[
-      styles.button,
-      {
-        backgroundColor: ['back', 'skip'].includes(title) ? '#FF7648' : '#4DC591',
-        marginRight: isEnd ? 0 : 2,
-      },
-    ]}
+    className={`flex-1 h-[60px] justify-center items-center mb-0.5 ${isEnd ? '' : 'mr-0.5'} ${
+      ['back', 'skip'].includes(title) ? 'bg-[#FF7648]' : 'bg-[#4DC591]'
+    }`}
     onPress={() => {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       onPress();
@@ -32,14 +28,14 @@ const Button: React.FC<ButtonProps> = ({ title, onPress, isEnd }) => (
     {title === 'back' ? (
       <Icon name="arrow-back" size={30} color="white" />
     ) : title === 'skip' ? null : (
-      <Text style={styles.buttonText}>{title}</Text>
+      <Text className="text-white text-2xl font-bold">{title}</Text>
     )}
   </TouchableOpacity>
 );
 
 const WideButton: React.FC<ButtonProps> = ({ onPress }) => (
   <TouchableOpacity
-    style={[styles.wideButton, { backgroundColor: '#FF7648' }]}
+    className="h-[60px] justify-center items-center bg-[#FF7648]"
     onPress={() => {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       onPress();
@@ -110,9 +106,9 @@ export const WeightKeyboard: React.FC<KeyboardProps> = ({ onSubmit, onValueChang
   ];
 
   return (
-    <View style={styles.container}>
+    <View className="w-full max-w-[400px]">
       {rows.map((row, rowIndex) => (
-        <View key={rowIndex} style={styles.row}>
+        <View key={rowIndex} className="flex-row w-full">
           {row.map((button, idx) => (
             <Button
               key={button.toString()}
@@ -127,32 +123,3 @@ export const WeightKeyboard: React.FC<KeyboardProps> = ({ onSubmit, onValueChang
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    width: '100%',
-    maxWidth: 400,
-  },
-  button: {
-    marginBottom: 2,
-    flex: 1,
-    height: 60,
-    backgroundColor: '#4DC591',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  wideButton: {
-    height: 60,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: 'white',
-    fontSize: 30,
-    fontWeight: 'bold',
-  },
-  row: {
-    flexDirection: 'row',
-    width: '100%',
-  },
-});
