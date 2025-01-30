@@ -1,2 +1,13 @@
 - Ability to edit today's weight
 - Store gender, age, initial weight, activity level
+  - add to settings page
+  - onboarding flow to capture the above
+- style settings page
+- create a theme and use tokens
+- add dark mode or color themes
+- more data screen
+  - shows what you currently have in debug
+  - and latest weight if any
+- intra-day calorie entry log
+  - can delete entries
+  - clear when completing day

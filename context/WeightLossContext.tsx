@@ -31,6 +31,14 @@ export type WeightHistory = {
   weight: number;
 };
 
+export type Gender = 'male' | 'female';
+export type ActivityLevel =
+  | 'sedentary'
+  | 'lightExercise'
+  | 'moderateExercise'
+  | 'heavyExercise'
+  | 'athlete';
+
 interface WeightLossContextType {
   debug: boolean;
   mode: string;
@@ -45,6 +53,8 @@ interface WeightLossContextType {
   deficit: number;
   calorieGoal: number;
   isTodaysWeightLogged: boolean;
+  gender: Gender | undefined;
+  activityLevel: ActivityLevel;
   setDebug: React.Dispatch<React.SetStateAction<boolean>>;
   setMode: React.Dispatch<React.SetStateAction<string>>;
   setValue: React.Dispatch<React.SetStateAction<string>>;
@@ -54,6 +64,8 @@ interface WeightLossContextType {
   handleSubmitWeight: (weight: string) => void;
   handleValueChange: (changedValue: string) => void;
   showCompleteDayDialog: () => void;
+  setGender: React.Dispatch<React.SetStateAction<Gender | undefined>>;
+  setActivityLevel: React.Dispatch<React.SetStateAction<ActivityLevel>>;
 }
 
 interface WeightLossProviderProps {
@@ -68,9 +80,12 @@ export const WeightLossProvider = ({ children }: WeightLossProviderProps) => {
   const [value, setValue] = useState('');
   const [todaysCalories, setTodaysCalories] = useState(DEFAULT_TODAYS_CALORIES);
   const [showSettings, setShowSettings] = useState(false);
-  const [weightLossGoal, setWeightLossGoal] = useState(DEFAULT_WEIGHT_LOSS_GOAL);
   const [calorieHistory, setCalorieHistory] = useState<CalorieHistory[]>(DEFAULT_CALORIE_HISTORY);
   const [weightHistory, setWeightHistory] = useState<WeightHistory[]>(DEFAULT_WEIGHT_HISTORY);
+  const [weightLossGoal, setWeightLossGoal] = useState(DEFAULT_WEIGHT_LOSS_GOAL);
+  const [gender, setGender] = useState<Gender | undefined>(undefined);
+  const [activityLevel, setActivityLevel] = useState<ActivityLevel>('lightExercise');
+
   const [areLocalStatsLoaded, setAreLocalStatsLoaded] = useState(false);
 
   useEffect(() => {
@@ -227,6 +242,8 @@ export const WeightLossProvider = ({ children }: WeightLossProviderProps) => {
         deficit,
         calorieGoal,
         isTodaysWeightLogged,
+        gender,
+        activityLevel,
         handleSubmitCalories,
         handleSubmitWeight,
         handleValueChange,
@@ -236,6 +253,8 @@ export const WeightLossProvider = ({ children }: WeightLossProviderProps) => {
         setDebug,
         setShowSettings,
         setWeightLossGoal,
+        setGender,
+        setActivityLevel,
       }}
     >
       {children}

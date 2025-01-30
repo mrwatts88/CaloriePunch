@@ -24,7 +24,7 @@ const Button: React.FC<ButtonProps> = ({ title, onPress, isEnd }) => (
     {title === 'back' ? (
       <Icon name="arrow-back" size={30} color="white" />
     ) : title === 'skip' ? null : (
-      <Text className="text-white text-2xl font-bold">{title}</Text>
+      <Text className="text-white text-4xl font-bold">{title}</Text>
     )}
   </TouchableOpacity>
 );

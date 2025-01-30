@@ -46,10 +46,10 @@ export default function () {
                 setMode(Mode.Weight);
               }
             }}
-            className={`flex justify-center items-center flex-1 mr-4 rounded-lg p-4 bg-[#FF7648] h-[55px] flex-row ${isTodaysWeightLogged ? '' : 'shadow-md border-gray-400'}`}
+            className={`flex justify-center items-center flex-1 mr-4 rounded-lg p-4 bg-[#FF7648] h-[55px] flex-row ${isTodaysWeightLogged ? '' : 'shadow-sm border-gray-400'}`}
           >
             {!isTodaysWeightLogged && mode !== Mode.Weight && (
-              <View className="absolute w-[15px] h-[15px] top-[-5px] right-[-5px] rounded-full border border-gray-400 bg-red-500" />
+              <View className="absolute w-[15px] h-[15px] top-[-5px] right-[-5px] rounded-full border bg-red-500" />
             )}
             <View>
               {isTodaysWeightLogged ? (
@@ -80,12 +80,12 @@ export default function () {
             onPress={() => {
               setShowSettings(true);
             }}
-            className="h-[55px] w-[55px] rounded-lg justify-center items-center border-2 border-[#FF7648]"
+            className="shadow-sm bg-[#FFF8DC] h-[55px] w-[55px] rounded-lg justify-center items-center border-2 border-[#4DC591]"
           >
-            <Icon name="settings" size={30} color="black" />
+            <Icon name="settings" size={30} color="#4DC591" />
           </TouchableOpacity>
         </View>
-        <View className="flex rounded-lg p-4 flex-1 justify-center items-center">
+        <View className="my-4 border-2 border-[#8F98FF] flex rounded-lg p-4 flex-1 justify-center items-center">
           <Text className="text-[#8F98FF] text-xl mb-1 font-bold text-center">
             Calories Left Today
           </Text>
@@ -111,7 +111,7 @@ export default function () {
       <TouchableOpacity
         disabled={mode !== Mode.Calories}
         onPress={showCompleteDayDialog}
-        className="bg-[#4DC591] p-4 justify-center items-center mt-2 rounded-lg h-[55px] w-full shadow-md border-gray-400"
+        className="bg-[#4DC591] p-4 justify-center items-center mt-4 rounded-lg h-[55px] w-full shadow-sm border-gray-400"
       >
         <Text
           className={`text-white text-lg font-bold text-center ${mode === Mode.Calories ? 'opacity-100' : 'opacity-40'}`}

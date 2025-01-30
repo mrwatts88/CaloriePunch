@@ -25,7 +25,7 @@ const Button: React.FC<ButtonProps> = ({ title, onPress, isEnd }) => (
     ) : title === 'plusminus' ? (
       <McIcon name="plus-minus" size={30} color="white" />
     ) : (
-      <Text className="text-white text-2xl font-bold">{title}</Text>
+      <Text className="text-white text-4xl font-bold">{title}</Text>
     )}
   </TouchableOpacity>
 );
