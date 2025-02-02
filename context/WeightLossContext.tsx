@@ -1,3 +1,4 @@
+import { ActivityLevel, CalorieHistory, Gender, WeightHistory } from '@/types/types';
 import {
   calculateTdee,
   calculateTwoWeekChange,
@@ -13,31 +14,6 @@ const DEFAULT_TODAYS_CALORIES = 0;
 const DEFAULT_CALORIE_HISTORY: CalorieHistory[] = [];
 const DEFAULT_WEIGHT_HISTORY: WeightHistory[] = [];
 const DEFAULT_WEIGHT_LOSS_GOAL = 1.0;
-
-export const DEFAULT_TDEE = 2500;
-
-export enum Mode {
-  Calories = 'calories',
-  Weight = 'weight',
-}
-
-export type CalorieHistory = {
-  calories: number;
-  date: string;
-};
-
-export type WeightHistory = {
-  date: string;
-  weight: number;
-};
-
-export type Gender = 'male' | 'female';
-export type ActivityLevel =
-  | 'sedentary'
-  | 'lightExercise'
-  | 'moderateExercise'
-  | 'heavyExercise'
-  | 'athlete';
 
 interface WeightLossContextType {
   debug: boolean;
@@ -164,27 +140,39 @@ export const WeightLossProvider = ({ children }: WeightLossProviderProps) => {
   const showCompleteDayDialog = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
-    Alert.alert('Complete Day', 'Are you sure you want to complete the day?', [
-      {
-        text: 'Cancel',
-        style: 'cancel',
-      },
-      {
-        text: 'Confirm',
-        onPress: handleCompleteDay,
-      },
-    ]);
+    Alert.alert(
+      `Completing day with ${todaysCalories} calories`,
+      'Is this calorie total for yesterday or today?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Yesterday',
+          onPress: () => handleCompleteDay(true),
+        },
+        {
+          text: 'Today',
+          onPress: () => handleCompleteDay(),
+        },
+      ]
+    );
   };
 
-  const handleCompleteDay = () => {
-    const existingToday = calorieHistory.find(
-      (entry) => entry.date === dateToDashedDateString(new Date())
+  const handleCompleteDay = (yesterday = false) => {
+    const todaysDate = dateToDashedDateString(new Date());
+    const yesterdaysDate = dateToDashedDateString(
+      new Date(new Date().getTime() - 24 * 60 * 60 * 1000)
     );
 
+    const dateOfEntry = yesterday ? yesterdaysDate : todaysDate;
+    const existingEntry = calorieHistory.find((entry) => entry.date === dateOfEntry);
+
     let updatedCalorieHistory: CalorieHistory[] = [];
-    if (existingToday) {
+    if (existingEntry) {
       updatedCalorieHistory = calorieHistory.map((entry) => {
-        if (entry.date === dateToDashedDateString(new Date())) {
+        if (entry.date === dateOfEntry) {
           return {
             ...entry,
             calories: todaysCalories,
@@ -197,7 +185,7 @@ export const WeightLossProvider = ({ children }: WeightLossProviderProps) => {
         ...calorieHistory,
         {
           calories: todaysCalories,
-          date: dateToDashedDateString(new Date()),
+          date: dateOfEntry,
         },
       ];
     }

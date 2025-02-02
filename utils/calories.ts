@@ -1,4 +1,5 @@
-import { CalorieHistory, DEFAULT_TDEE, WeightHistory } from '@/context/WeightLossContext';
+import { DEFAULT_TDEE } from '@/constants';
+import { CalorieHistory, WeightHistory } from '@/types/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const dateToDashedDateString = (date: Date) => {

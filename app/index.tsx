@@ -2,7 +2,8 @@ import { AppContainer } from '@/components/AppContainer';
 import { Debug } from '@/components/Debug';
 import { CaloriesKeyboard, WeightKeyboard } from '@/components/keyboard';
 import { Settings } from '@/components/Settings';
-import { Mode, useWeightLoss } from '@/context/WeightLossContext';
+import { useWeightLoss } from '@/context/WeightLossContext';
+import { Mode } from '@/types/types';
 import * as Haptics from 'expo-haptics';
 import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
@@ -22,6 +23,7 @@ export default function () {
     twoWeekChange,
     calorieGoal,
     isTodaysWeightLogged,
+    weightHistory,
   } = useWeightLoss();
 
   if (debug) {
@@ -31,6 +33,8 @@ export default function () {
   if (showSettings) {
     return <Settings />;
   }
+
+  const latestWeight = weightHistory.at(-1);
 
   return (
     <AppContainer>
@@ -53,15 +57,25 @@ export default function () {
             )}
             <View>
               {isTodaysWeightLogged ? (
-                <>
-                  <Text className="text-white text-lg font-bold text-center">
-                    2 Wk Weight Change
-                  </Text>
-                  <Text className="text-white text-lg font-bold text-center">
-                    {twoWeekChange > 0 ? '+' : ''}
-                    {twoWeekChange} lbs
-                  </Text>
-                </>
+                <View className="flex flex-row">
+                  {latestWeight && (
+                    <View className="mr-8">
+                      <Text className="text-white text-lg font-bold text-center">
+                        Current Weight
+                      </Text>
+                      <Text className="text-white text-lg font-bold text-center">
+                        {latestWeight.weight} lbs
+                      </Text>
+                    </View>
+                  )}
+                  <View>
+                    <Text className="text-white text-lg font-bold text-center">2 Wk Change</Text>
+                    <Text className="text-white text-lg font-bold text-center">
+                      {twoWeekChange > 0 ? '+' : ''}
+                      {twoWeekChange} lbs
+                    </Text>
+                  </View>
+                </View>
               ) : (
                 <Text className="text-white text-lg font-bold text-center">
                   {mode === Mode.Weight ? (
