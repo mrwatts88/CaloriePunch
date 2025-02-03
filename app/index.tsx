@@ -3,9 +3,11 @@ import { CalorieLog } from '@/components/CalorieLog';
 import { Debug } from '@/components/Debug';
 import { CaloriesKeyboard, WeightKeyboard } from '@/components/keyboard';
 import { Settings } from '@/components/Settings';
+import { Summary } from '@/components/Summary';
 import { useWeightLoss } from '@/context/WeightLossContext';
 import { Mode } from '@/types/types';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -21,6 +23,8 @@ export default function () {
     setShowSettings,
     showCalorieLog,
     setShowCalorieLog,
+    showSummary,
+    setShowSummary,
     todaysCalories,
     showCompleteDayDialog,
     twoWeekChange,
@@ -39,6 +43,10 @@ export default function () {
 
   if (showCalorieLog) {
     return <CalorieLog />;
+  }
+
+  if (showSummary) {
+    return <Summary />;
   }
 
   const latestWeight = weightHistory.at(-1);
@@ -118,6 +126,12 @@ export default function () {
             className="absolute right-0 bottom-0 p-3"
           >
             <FontAwesome5 name="clipboard-list" size={24} color="#8F98FF" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => setShowSummary(true)}
+            className="absolute left-0 bottom-0 p-3"
+          >
+            <Ionicons name="stats-chart" size={24} color="#8F98FF" />
           </TouchableOpacity>
         </View>
       </View>
