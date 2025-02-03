@@ -1,12 +1,11 @@
-- Ability to edit today's weight
 - Store gender, age, initial weight, activity level
   - add to settings page
   - onboarding flow to capture the above
+- Calculate TDEE with equation if not enough data in local storage
+  - show a tooltip saying that you need more data to make this personalized and more accurate
 - more data screen
   - bottom left
   - shows what you currently have in debug
   - and latest weight if any
-- intra-day calorie entry log
-  - bottom right
-  - can delete entries
-  - clear when completing day
+  - can delete latest weight entry
+  - can clear today's calories

@@ -1,5 +1,4 @@
 import { useWeightLoss } from '@/context/WeightLossContext';
-import * as Haptics from 'expo-haptics';
 import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -17,7 +16,6 @@ const Button: React.FC<ButtonProps> = ({ title, onPress, isEnd }) => (
       ['back', 'skip'].includes(title) ? 'bg-[#FF7648]' : 'bg-[#4DC591]'
     }`}
     onPress={() => {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       onPress();
     }}
   >
@@ -33,7 +31,6 @@ const WideButton: React.FC<ButtonProps> = ({ onPress }) => (
   <TouchableOpacity
     className="h-[60px] justify-center items-center bg-[#FF7648]"
     onPress={() => {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       onPress();
     }}
   >

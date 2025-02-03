@@ -1,8 +1,7 @@
+import { FullScreenPage } from '@/components/FullScreenPage';
 import { useWeightLoss } from '@/context/WeightLossContext';
 import React from 'react';
-import { Pressable, Text, TouchableOpacity, View } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
-import { AppContainer } from './AppContainer';
+import { Pressable, Text, View } from 'react-native';
 
 export const Settings = () => {
   const {
@@ -88,38 +87,22 @@ export const Settings = () => {
   ];
 
   return (
-    <AppContainer>
-      <View className="w-full flex flex-col mb-8">
-        <View className="flex flex-row justify-between items-center w-full">
-          <View className="w-[55px]" />
-          <Text className="text-slate-700 text-4xl font-bold text-center flex-1">Settings</Text>
-          <TouchableOpacity
-            onPress={() => {
-              setShowSettings(false);
-            }}
-            className="shadow-sm bg-[#FFF8DC] h-[55px] w-[55px] rounded-lg justify-center items-center border-2 border-[#4DC591]"
-          >
-            <Icon name="close" size={30} color="#4DC591" />
-          </TouchableOpacity>
-        </View>
+    <FullScreenPage title="Settings" onClose={() => setShowSettings(false)}>
+      <View className="mb-6">
+        <Text className="text-slate-700 mb-2 font-bold text-center">
+          Weight Loss Goal (lbs/week)
+        </Text>
+        <ButtonToggleGroup buttons={weightLossGoalButtons} />
       </View>
-      <View className="flex-1">
-        <View className="mb-6">
-          <Text className="text-slate-700 mb-2 font-bold text-center">
-            Weight Loss Goal (lbs/week)
-          </Text>
-          <ButtonToggleGroup buttons={weightLossGoalButtons} />
-        </View>
-        <View className="mb-6">
-          <Text className="text-slate-700 mb-2 font-bold text-center">Gender</Text>
-          <ButtonToggleGroup buttons={genderButtons} />
-        </View>
-        <View className="mb-6">
-          <Text className="text-slate-700 mb-2 font-bold text-center">Activity Level</Text>
-          <VerticalButtonToggleGroup buttons={activityLevelButtons} />
-        </View>
+      <View className="mb-6">
+        <Text className="text-slate-700 mb-2 font-bold text-center">Gender</Text>
+        <ButtonToggleGroup buttons={genderButtons} />
       </View>
-    </AppContainer>
+      <View className="mb-6">
+        <Text className="text-slate-700 mb-2 font-bold text-center">Activity Level</Text>
+        <VerticalButtonToggleGroup buttons={activityLevelButtons} />
+      </View>
+    </FullScreenPage>
   );
 };
 

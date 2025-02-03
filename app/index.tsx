@@ -1,10 +1,11 @@
 import { AppContainer } from '@/components/AppContainer';
+import { CalorieLog } from '@/components/CalorieLog';
 import { Debug } from '@/components/Debug';
 import { CaloriesKeyboard, WeightKeyboard } from '@/components/keyboard';
 import { Settings } from '@/components/Settings';
 import { useWeightLoss } from '@/context/WeightLossContext';
 import { Mode } from '@/types/types';
-import * as Haptics from 'expo-haptics';
+import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -18,6 +19,8 @@ export default function () {
     value,
     showSettings,
     setShowSettings,
+    showCalorieLog,
+    setShowCalorieLog,
     todaysCalories,
     showCompleteDayDialog,
     twoWeekChange,
@@ -34,6 +37,10 @@ export default function () {
     return <Settings />;
   }
 
+  if (showCalorieLog) {
+    return <CalorieLog />;
+  }
+
   const latestWeight = weightHistory.at(-1);
 
   return (
@@ -43,7 +50,6 @@ export default function () {
           <TouchableOpacity
             disabled={isTodaysWeightLogged}
             onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
               if (mode === Mode.Weight) {
                 setMode(Mode.Calories);
               } else {
@@ -103,9 +109,16 @@ export default function () {
           <Text className="text-[#8F98FF] text-xl mb-1 font-bold text-center">
             Calories Left Today
           </Text>
-          <Text className="text-[#8F98FF] text-9xl font-bold text-center">
+          <Text className="text-[#8F98FF] text-[120px] font-bold text-center mb-0 h-[100px] leading-none">
             {calorieGoal - todaysCalories}
           </Text>
+
+          <TouchableOpacity
+            onPress={() => setShowCalorieLog(true)}
+            className="absolute right-0 bottom-0 p-3"
+          >
+            <FontAwesome5 name="clipboard-list" size={24} color="#8F98FF" />
+          </TouchableOpacity>
         </View>
       </View>
       <View className="rounded-lg justify-center items-center overflow-hidden w-full">

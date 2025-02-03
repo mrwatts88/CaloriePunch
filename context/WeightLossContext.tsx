@@ -6,11 +6,10 @@ import {
   getData,
   storeData,
 } from '@/utils/calories';
-import * as Haptics from 'expo-haptics';
 import React, { createContext, ReactNode, useContext, useEffect, useMemo, useState } from 'react';
 import { Alert } from 'react-native';
 
-const DEFAULT_TODAYS_CALORIES = 0;
+const DEFAULT_TODAYS_CALORIE_ENTRIES: number[] = [];
 const DEFAULT_CALORIE_HISTORY: CalorieHistory[] = [];
 const DEFAULT_WEIGHT_HISTORY: WeightHistory[] = [];
 const DEFAULT_WEIGHT_LOSS_GOAL = 1.0;
@@ -20,7 +19,9 @@ interface WeightLossContextType {
   mode: string;
   value: string;
   todaysCalories: number;
+  todaysCalorieEntries: number[];
   showSettings: boolean;
+  showCalorieLog: boolean;
   weightLossGoal: number;
   calorieHistory: CalorieHistory[];
   weightHistory: WeightHistory[];
@@ -36,12 +37,14 @@ interface WeightLossContextType {
   setValue: React.Dispatch<React.SetStateAction<string>>;
   setWeightLossGoal: React.Dispatch<React.SetStateAction<number>>;
   setShowSettings: React.Dispatch<React.SetStateAction<boolean>>;
+  setShowCalorieLog: React.Dispatch<React.SetStateAction<boolean>>;
   handleSubmitCalories: (calories: string) => void;
   handleSubmitWeight: (weight: string) => void;
   handleValueChange: (changedValue: string) => void;
   showCompleteDayDialog: () => void;
   setGender: React.Dispatch<React.SetStateAction<Gender | undefined>>;
   setActivityLevel: React.Dispatch<React.SetStateAction<ActivityLevel>>;
+  removeCalorieEntry: (idx: number) => void;
 }
 
 interface WeightLossProviderProps {
@@ -54,8 +57,9 @@ export const WeightLossProvider = ({ children }: WeightLossProviderProps) => {
   const [debug, setDebug] = useState(false);
   const [mode, setMode] = useState('calories');
   const [value, setValue] = useState('');
-  const [todaysCalories, setTodaysCalories] = useState(DEFAULT_TODAYS_CALORIES);
+  const [todaysCalorieEntries, setTodaysCalorieEntries] = useState(DEFAULT_TODAYS_CALORIE_ENTRIES);
   const [showSettings, setShowSettings] = useState(false);
+  const [showCalorieLog, setShowCalorieLog] = useState(false);
   const [calorieHistory, setCalorieHistory] = useState<CalorieHistory[]>(DEFAULT_CALORIE_HISTORY);
   const [weightHistory, setWeightHistory] = useState<WeightHistory[]>(DEFAULT_WEIGHT_HISTORY);
   const [weightLossGoal, setWeightLossGoal] = useState(DEFAULT_WEIGHT_LOSS_GOAL);
@@ -66,13 +70,15 @@ export const WeightLossProvider = ({ children }: WeightLossProviderProps) => {
 
   useEffect(() => {
     const init = async () => {
-      const localTodaysCalories = await getData('todaysCalories');
+      const localTodaysCalorieEntries = await getData('todaysCalorieEntries');
       const localCalorieHistory = await getData('calorieHistory');
       const localWeightHistory = await getData('weightHistory');
       const localWeightLossGoal = await getData('weightLossGoal');
 
-      setTodaysCalories(
-        localTodaysCalories ? parseInt(localTodaysCalories) : DEFAULT_TODAYS_CALORIES
+      setTodaysCalorieEntries(
+        localTodaysCalorieEntries
+          ? JSON.parse(localTodaysCalorieEntries)
+          : DEFAULT_TODAYS_CALORIE_ENTRIES
       );
       setCalorieHistory(
         localCalorieHistory ? JSON.parse(localCalorieHistory) : DEFAULT_CALORIE_HISTORY
@@ -92,19 +98,17 @@ export const WeightLossProvider = ({ children }: WeightLossProviderProps) => {
   useEffect(() => {
     if (!areLocalStatsLoaded) return;
 
-    storeData('todaysCalories', todaysCalories.toString());
+    storeData('todaysCalorieEntries', JSON.stringify(todaysCalorieEntries));
     storeData('calorieHistory', JSON.stringify(calorieHistory));
     storeData('weightHistory', JSON.stringify(weightHistory));
     storeData('weightLossGoal', weightLossGoal.toString());
-  }, [todaysCalories, calorieHistory, weightHistory, weightLossGoal, areLocalStatsLoaded]);
+  }, [todaysCalorieEntries, calorieHistory, weightHistory, weightLossGoal, areLocalStatsLoaded]);
 
   const handleSubmitCalories = (calories: string) => {
-    setTodaysCalories((prev) => prev + parseInt(calories));
+    setTodaysCalorieEntries((prev) => [...prev, parseInt(calories)]);
   };
 
   const handleSubmitWeight = (weight: string) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-
     const existingToday = weightHistory.find(
       (entry) => entry.date === dateToDashedDateString(new Date())
     );
@@ -137,9 +141,12 @@ export const WeightLossProvider = ({ children }: WeightLossProviderProps) => {
     setValue(changedValue);
   };
 
-  const showCompleteDayDialog = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  const todaysCalories = useMemo(
+    () => todaysCalorieEntries.reduce((acc, curr) => acc + curr, 0),
+    [todaysCalorieEntries]
+  );
 
+  const showCompleteDayDialog = () => {
     Alert.alert(
       `Completing day with ${todaysCalories} calories`,
       'Is this calorie total for yesterday or today?',
@@ -191,7 +198,7 @@ export const WeightLossProvider = ({ children }: WeightLossProviderProps) => {
     }
 
     setCalorieHistory(updatedCalorieHistory.slice(-30)); // todo: cut off entries older than 30 days
-    setTodaysCalories(0);
+    setTodaysCalorieEntries([]);
   };
 
   const twoWeekChange = useMemo(() => calculateTwoWeekChange(weightHistory), [weightHistory]);
@@ -221,7 +228,9 @@ export const WeightLossProvider = ({ children }: WeightLossProviderProps) => {
         mode,
         value,
         todaysCalories,
+        todaysCalorieEntries,
         showSettings,
+        showCalorieLog,
         weightLossGoal,
         calorieHistory,
         weightHistory,
@@ -240,9 +249,13 @@ export const WeightLossProvider = ({ children }: WeightLossProviderProps) => {
         setValue,
         setDebug,
         setShowSettings,
+        setShowCalorieLog,
         setWeightLossGoal,
         setGender,
         setActivityLevel,
+        removeCalorieEntry: (idx: number) => {
+          setTodaysCalorieEntries((prev) => prev.filter((_, i) => i !== idx));
+        },
       }}
     >
       {children}

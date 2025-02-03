@@ -1,1 +1,1 @@
-export const DEFAULT_TDEE = 2500;
+export const DEFAULT_TDEE = 3000;
