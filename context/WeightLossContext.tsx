@@ -109,6 +109,10 @@ export const WeightLossProvider = ({ children }: WeightLossProviderProps) => {
   }, [todaysCalorieEntries, calorieHistory, weightHistory, weightLossGoal, areLocalStatsLoaded]);
 
   const handleSubmitCalories = (calories: string) => {
+    if (!calories || parseInt(calories) === 0) {
+      return;
+    }
+
     setTodaysCalorieEntries((prev) => [...prev, parseInt(calories)]);
   };
 

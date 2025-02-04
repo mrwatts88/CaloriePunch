@@ -19,11 +19,11 @@ export const Summary = () => {
   return (
     <FullScreenPage title="Summary" onClose={() => setShowSummary(false)}>
       <SummaryItem label="Weight Loss Goal" value={`${weightLossGoal} lbs/week`} />
-      <SummaryItem label="Calories Burned" value={`${tdee} Calories/day`} />
+      <SummaryItem label="Calorie Burn" value={`${tdee} Calories/day`} />
       <SummaryItem label="Deficit Goal" value={`${deficit} Calories/day`} />
       <SummaryItem label="Intake Goal" value={`${calorieGoal} Calories/day`} />
       <SummaryItem label="Today's Intake" value={`${todaysCalories} Calories`} />
-      <SummaryItem label="Remaining Today" value={`${caloriesLeft} Calories`} />
+      <SummaryItem label="Remaining Today" value={`${Math.max(caloriesLeft, 0)} Calories`} />
       <SummaryItem label="Current Weight" value={`${weightHistory.at(-1)?.weight || ''} lbs`} />
       <SummaryItem label="Change in Last 2 Weeks" value={`${twoWeekChange} lbs`} />
     </FullScreenPage>

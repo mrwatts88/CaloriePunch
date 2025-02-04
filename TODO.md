@@ -4,8 +4,5 @@
 - Calculate TDEE with equation if not enough data in local storage
   - show a tooltip saying that you need more data to make this personalized and more accurate
 - more data screen
-  - bottom left
-  - shows what you currently have in debug
-  - and latest weight if any
   - can delete latest weight entry
   - can clear today's calories

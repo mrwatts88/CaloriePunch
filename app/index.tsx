@@ -10,7 +10,6 @@ import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
 
 export default function () {
   const {
@@ -27,10 +26,8 @@ export default function () {
     setShowSummary,
     todaysCalories,
     showCompleteDayDialog,
-    twoWeekChange,
     calorieGoal,
     isTodaysWeightLogged,
-    weightHistory,
   } = useWeightLoss();
 
   if (debug) {
@@ -49,78 +46,51 @@ export default function () {
     return <Summary />;
   }
 
-  const latestWeight = weightHistory.at(-1);
-
   return (
     <AppContainer>
       <View className="w-full flex flex-col flex-1 min-h-[200px]">
         <View className="flex flex-row justify-between items-center w-full">
-          <TouchableOpacity
-            disabled={isTodaysWeightLogged}
-            onPress={() => {
-              if (mode === Mode.Weight) {
-                setMode(Mode.Calories);
-              } else {
-                setMode(Mode.Weight);
-              }
-            }}
-            className={`flex justify-center items-center flex-1 mr-4 rounded-lg p-4 bg-[#FF7648] h-[55px] flex-row ${isTodaysWeightLogged ? '' : 'shadow-sm border-gray-400'}`}
-          >
-            {!isTodaysWeightLogged && mode !== Mode.Weight && (
-              <View className="absolute w-[15px] h-[15px] top-[-5px] right-[-5px] rounded-full border bg-red-500" />
-            )}
-            <View>
-              {isTodaysWeightLogged ? (
-                <View className="flex flex-row">
-                  {latestWeight && (
-                    <View className="mr-8">
-                      <Text className="text-white text-lg font-bold text-center">
-                        Current Weight
-                      </Text>
-                      <Text className="text-white text-lg font-bold text-center">
-                        {latestWeight.weight} lbs
-                      </Text>
-                    </View>
-                  )}
-                  <View>
-                    <Text className="text-white text-lg font-bold text-center">2 Wk Change</Text>
-                    <Text className="text-white text-lg font-bold text-center">
-                      {twoWeekChange > 0 ? '+' : ''}
-                      {twoWeekChange} lbs
-                    </Text>
-                  </View>
-                </View>
-              ) : (
-                <Text className="text-white text-lg font-bold text-center">
-                  {mode === Mode.Weight ? (
-                    <Icon name="arrow-back" size={20} color="white" />
-                  ) : (
-                    <Text>Enter Today's Weight</Text>
-                  )}
-                </Text>
+          {!isTodaysWeightLogged && (
+            <TouchableOpacity
+              onPress={() => {
+                if (mode === Mode.Weight) {
+                  setMode(Mode.Calories);
+                } else {
+                  setMode(Mode.Weight);
+                }
+              }}
+              className={`flex justify-center items-center flex-1 rounded-lg p-4 bg-[#FF7648] h-[55px] flex-row shadow-sm border-gray-400`}
+            >
+              {mode !== Mode.Weight && (
+                <View className="absolute w-[15px] h-[15px] top-[-5px] right-[-5px] rounded-full border bg-red-500" />
               )}
-            </View>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onLongPress={() => {
-              setDebug((prev) => !prev);
-            }}
-            onPress={() => {
-              setShowSettings(true);
-            }}
-            className="shadow-sm bg-[#FFF8DC] h-[55px] w-[55px] rounded-lg justify-center items-center border-2 border-[#4DC591]"
-          >
-            <Icon name="settings" size={30} color="#4DC591" />
-          </TouchableOpacity>
+              <Text className="text-white text-lg font-bold text-center">
+                {mode === Mode.Weight ? (
+                  <Ionicons name="arrow-back" size={20} color="white" />
+                ) : (
+                  <Text>Enter Today's Weight</Text>
+                )}
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
         <View className="my-4 border-2 border-[#8F98FF] flex rounded-lg p-4 flex-1 justify-center items-center">
           <Text className="text-[#8F98FF] text-xl mb-1 font-bold text-center">
             Calories Left Today
           </Text>
           <Text className="text-[#8F98FF] text-[120px] font-bold text-center mb-0 h-[100px] leading-none">
-            {calorieGoal - todaysCalories}
+            {Math.max(calorieGoal - todaysCalories, 0)}
           </Text>
 
+          <TouchableOpacity
+            onLongPress={() => {
+              setDebug((prev) => !prev);
+            }}
+            onPress={() => setShowSettings(true)}
+            className="absolute right-0 top-0 p-2"
+          >
+            <Ionicons name="settings" size={24} color="#8F98FF" />
+          </TouchableOpacity>
           <TouchableOpacity
             onPress={() => setShowCalorieLog(true)}
             className="absolute right-0 bottom-0 p-3"
