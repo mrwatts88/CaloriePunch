@@ -1,5 +1,4 @@
-import { DEFAULT_TDEE } from '@/constants';
-import { CalorieHistory, WeightHistory } from '@/types/types';
+import { ActivityLevel, CalorieHistory, Gender, WeightHistory } from '@/types/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const dateToDashedDateString = (date: Date) => {
@@ -129,11 +128,77 @@ export const calculateTwoWeekChange = (weightHistory: WeightHistory[]) => {
   return Math.round((lastTwoWeeksAvg - twoWeeksBeforeAvg) * 10) / 10;
 };
 
-export const calculateTdee = (weightHistory: WeightHistory[], calorieHistory: CalorieHistory[]) => {
+type CalculateEquationTdeeParams = {
+  gender?: Gender;
+  weightPounds?: number;
+  heightInches?: number;
+  age?: number;
+  activityLevel: ActivityLevel;
+};
+
+export const calculateEquationTdee = ({
+  gender = 'female',
+  weightPounds,
+  heightInches,
+  age = 40,
+  activityLevel = 'lightExercise',
+}: CalculateEquationTdeeParams) => {
+  // https://www.calculator.net/calorie-calculator.html
+
+  const defaultHeightInches = gender === 'female' ? 64 : 70;
+  const defaultweightPounds = gender === 'female' ? 155 : 190;
+  const weightInKg = (weightPounds ?? defaultweightPounds) / 2.20462;
+  const heightInCm = (heightInches ?? defaultHeightInches) * 2.54;
+
+  const activityLevelMultipliers = {
+    sedentary: 1.2,
+    lightExercise: 1.375,
+    moderateExercise: 1.55,
+    heavyExercise: 1.725,
+    athlete: 1.9,
+  };
+
+  let tdee;
+  if (gender === 'male') {
+    tdee =
+      (13.397 * weightInKg + 4.799 * heightInCm - 5.677 * age + 88.362) *
+      activityLevelMultipliers[activityLevel];
+  } else {
+    tdee =
+      (9.247 * weightInKg + 3.098 * heightInCm - 4.33 * age + 447.593) *
+      activityLevelMultipliers[activityLevel];
+  }
+
+  return Math.round(tdee * 1) / 1;
+};
+
+type CalculateTdeeParams = {
+  gender?: Gender;
+  weightPounds?: number;
+  heightInches?: number;
+  age?: number;
+  activityLevel: ActivityLevel;
+  weightHistory: WeightHistory[];
+  calorieHistory: CalorieHistory[];
+};
+
+export const calculateTdee = ({
+  gender = 'female',
+  heightInches,
+  age = 40,
+  activityLevel = 'lightExercise',
+  weightHistory,
+  calorieHistory,
+}: CalculateTdeeParams) => {
   if (weightHistory.length < 14 || calorieHistory.length < 14) {
-    // if there are not 14 entries in the last 30 days for either weight or calories, return the default TDEE
-    // later this default should be calculated based on the user's gender, age, weight, and activity level
-    return DEFAULT_TDEE;
+    // if there are not 14 entries in the last 30 days for either weight or calories, return the equation TDEE
+    return calculateEquationTdee({
+      gender,
+      weightPounds: weightHistory.at(-1)?.weight,
+      heightInches,
+      age,
+      activityLevel,
+    });
   }
 
   const filledInCalorieHistory = fillInCalorieHistory(calorieHistory);

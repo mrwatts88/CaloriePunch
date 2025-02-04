@@ -1,8 +1,8 @@
-- Store gender, age, initial weight, activity level
+- Store gender, age, initial weight, activity level, and height
   - add to settings page
   - onboarding flow to capture the above
-- Calculate TDEE with equation if not enough data in local storage
-  - show a tooltip saying that you need more data to make this personalized and more accurate
+  - if not enough daily entries, show a tooltip saying that you need more data to make TDEE personalized and more accurate
 - more data screen
   - can delete latest weight entry
   - can clear today's calories
+- allow metric units

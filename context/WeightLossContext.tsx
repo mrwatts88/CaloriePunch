@@ -34,6 +34,7 @@ interface WeightLossContextType {
   gender: Gender | undefined;
   activityLevel: ActivityLevel;
   caloriesLeft: number;
+  age: number | undefined;
   setDebug: React.Dispatch<React.SetStateAction<boolean>>;
   setMode: React.Dispatch<React.SetStateAction<string>>;
   setValue: React.Dispatch<React.SetStateAction<string>>;
@@ -48,6 +49,7 @@ interface WeightLossContextType {
   setGender: React.Dispatch<React.SetStateAction<Gender | undefined>>;
   setActivityLevel: React.Dispatch<React.SetStateAction<ActivityLevel>>;
   removeCalorieEntry: (idx: number) => void;
+  setAge: React.Dispatch<React.SetStateAction<number | undefined>>;
 }
 
 interface WeightLossProviderProps {
@@ -69,6 +71,7 @@ export const WeightLossProvider = ({ children }: WeightLossProviderProps) => {
   const [weightLossGoal, setWeightLossGoal] = useState(DEFAULT_WEIGHT_LOSS_GOAL);
   const [gender, setGender] = useState<Gender | undefined>(undefined);
   const [activityLevel, setActivityLevel] = useState<ActivityLevel>('lightExercise');
+  const [age, setAge] = useState<number | undefined>(undefined);
 
   const [areLocalStatsLoaded, setAreLocalStatsLoaded] = useState(false);
 
@@ -78,6 +81,9 @@ export const WeightLossProvider = ({ children }: WeightLossProviderProps) => {
       const localCalorieHistory = await getData('calorieHistory');
       const localWeightHistory = await getData('weightHistory');
       const localWeightLossGoal = await getData('weightLossGoal');
+      const localAge = await getData('age');
+      const localActivityLevel = await getData('activityLevel');
+      const localGender = await getData('gender');
 
       setTodaysCalorieEntries(
         localTodaysCalorieEntries
@@ -93,6 +99,9 @@ export const WeightLossProvider = ({ children }: WeightLossProviderProps) => {
       setWeightLossGoal(
         localWeightLossGoal ? parseFloat(localWeightLossGoal) : DEFAULT_WEIGHT_LOSS_GOAL
       );
+      setAge(localAge ? parseInt(localAge) : undefined);
+      setActivityLevel((localActivityLevel ?? 'lightExercise') as ActivityLevel);
+      setGender((localGender ?? undefined) as Gender);
       setAreLocalStatsLoaded(true);
     };
 
@@ -106,7 +115,19 @@ export const WeightLossProvider = ({ children }: WeightLossProviderProps) => {
     storeData('calorieHistory', JSON.stringify(calorieHistory));
     storeData('weightHistory', JSON.stringify(weightHistory));
     storeData('weightLossGoal', weightLossGoal.toString());
-  }, [todaysCalorieEntries, calorieHistory, weightHistory, weightLossGoal, areLocalStatsLoaded]);
+    storeData('age', age?.toString() ?? '');
+    storeData('activityLevel', activityLevel);
+    storeData('gender', gender ?? '');
+  }, [
+    todaysCalorieEntries,
+    calorieHistory,
+    weightHistory,
+    weightLossGoal,
+    age,
+    activityLevel,
+    areLocalStatsLoaded,
+    gender,
+  ]);
 
   const handleSubmitCalories = (calories: string) => {
     if (!calories || parseInt(calories) === 0) {
@@ -211,8 +232,16 @@ export const WeightLossProvider = ({ children }: WeightLossProviderProps) => {
 
   const twoWeekChange = useMemo(() => calculateTwoWeekChange(weightHistory), [weightHistory]);
   const tdee = useMemo(
-    () => calculateTdee(weightHistory, calorieHistory),
-    [weightHistory, calorieHistory]
+    () =>
+      calculateTdee({
+        gender,
+        heightInches: undefined, // todo: store height
+        age,
+        activityLevel,
+        weightHistory, // todo: pass units
+        calorieHistory,
+      }),
+    [weightHistory, calorieHistory, gender, activityLevel, age]
   );
   const deficit = useMemo(() => (weightLossGoal * 3500) / 7, [weightLossGoal]);
   const calorieGoal = tdee - deficit;
@@ -251,6 +280,7 @@ export const WeightLossProvider = ({ children }: WeightLossProviderProps) => {
         gender,
         activityLevel,
         caloriesLeft: calorieGoal - todaysCalories,
+        age,
         handleSubmitCalories,
         handleSubmitWeight,
         handleValueChange,
@@ -264,6 +294,7 @@ export const WeightLossProvider = ({ children }: WeightLossProviderProps) => {
         setWeightLossGoal,
         setGender,
         setActivityLevel,
+        setAge,
         removeCalorieEntry: (idx: number) => {
           setTodaysCalorieEntries((prev) => prev.filter((_, i) => i !== idx));
         },

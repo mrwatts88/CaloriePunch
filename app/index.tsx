@@ -24,9 +24,8 @@ export default function () {
     setShowCalorieLog,
     showSummary,
     setShowSummary,
-    todaysCalories,
     showCompleteDayDialog,
-    calorieGoal,
+    caloriesLeft,
     isTodaysWeightLogged,
   } = useWeightLoss();
 
@@ -79,7 +78,7 @@ export default function () {
             Calories Left Today
           </Text>
           <Text className="text-[#8F98FF] text-[120px] font-bold text-center mb-0 h-[100px] leading-none">
-            {Math.max(calorieGoal - todaysCalories, 0)}
+            {caloriesLeft}
           </Text>
 
           <TouchableOpacity
