@@ -1,8 +1,3 @@
-- Store gender, age, initial weight, activity level, and height
-  - add to settings page
-  - onboarding flow to capture the above
-  - if not enough daily entries, show a tooltip saying that you need more data to make TDEE personalized and more accurate
-- more data screen
-  - can delete latest weight entry
-  - can clear today's calories
+- onboarding flow to capture gender, age, activity level, height, and weight loss rate goal
+- if not enough daily entries, show a tooltip saying that you need more data to make TDEE personalized and more accurate
 - allow metric units

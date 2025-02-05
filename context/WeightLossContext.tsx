@@ -35,6 +35,7 @@ interface WeightLossContextType {
   activityLevel: ActivityLevel;
   caloriesLeft: number;
   age: number | undefined;
+  height: number | undefined;
   setDebug: React.Dispatch<React.SetStateAction<boolean>>;
   setMode: React.Dispatch<React.SetStateAction<string>>;
   setValue: React.Dispatch<React.SetStateAction<string>>;
@@ -50,6 +51,9 @@ interface WeightLossContextType {
   setActivityLevel: React.Dispatch<React.SetStateAction<ActivityLevel>>;
   removeCalorieEntry: (idx: number) => void;
   setAge: React.Dispatch<React.SetStateAction<number | undefined>>;
+  resetCalories: () => void;
+  resetTodaysWeight: () => void;
+  setHeight: React.Dispatch<React.SetStateAction<number | undefined>>;
 }
 
 interface WeightLossProviderProps {
@@ -72,6 +76,7 @@ export const WeightLossProvider = ({ children }: WeightLossProviderProps) => {
   const [gender, setGender] = useState<Gender | undefined>(undefined);
   const [activityLevel, setActivityLevel] = useState<ActivityLevel>('lightExercise');
   const [age, setAge] = useState<number | undefined>(undefined);
+  const [height, setHeight] = useState<number | undefined>(undefined);
 
   const [areLocalStatsLoaded, setAreLocalStatsLoaded] = useState(false);
 
@@ -84,6 +89,7 @@ export const WeightLossProvider = ({ children }: WeightLossProviderProps) => {
       const localAge = await getData('age');
       const localActivityLevel = await getData('activityLevel');
       const localGender = await getData('gender');
+      const localHeight = await getData('height');
 
       setTodaysCalorieEntries(
         localTodaysCalorieEntries
@@ -102,6 +108,7 @@ export const WeightLossProvider = ({ children }: WeightLossProviderProps) => {
       setAge(localAge ? parseInt(localAge) : undefined);
       setActivityLevel((localActivityLevel ?? 'lightExercise') as ActivityLevel);
       setGender((localGender ?? undefined) as Gender);
+      setHeight(localHeight ? parseInt(localHeight) : undefined);
       setAreLocalStatsLoaded(true);
     };
 
@@ -118,6 +125,7 @@ export const WeightLossProvider = ({ children }: WeightLossProviderProps) => {
     storeData('age', age?.toString() ?? '');
     storeData('activityLevel', activityLevel);
     storeData('gender', gender ?? '');
+    storeData('height', height?.toString() ?? '');
   }, [
     todaysCalorieEntries,
     calorieHistory,
@@ -125,8 +133,9 @@ export const WeightLossProvider = ({ children }: WeightLossProviderProps) => {
     weightLossGoal,
     age,
     activityLevel,
-    areLocalStatsLoaded,
     gender,
+    height,
+    areLocalStatsLoaded,
   ]);
 
   const handleSubmitCalories = (calories: string) => {
@@ -235,13 +244,13 @@ export const WeightLossProvider = ({ children }: WeightLossProviderProps) => {
     () =>
       calculateTdee({
         gender,
-        heightInches: undefined, // todo: store height
+        heightInches: height,
         age,
         activityLevel,
         weightHistory, // todo: pass units
         calorieHistory,
       }),
-    [weightHistory, calorieHistory, gender, activityLevel, age]
+    [weightHistory, calorieHistory, gender, activityLevel, age, height]
   );
   const deficit = useMemo(() => (weightLossGoal * 3500) / 7, [weightLossGoal]);
   const calorieGoal = tdee - deficit;
@@ -281,6 +290,7 @@ export const WeightLossProvider = ({ children }: WeightLossProviderProps) => {
         activityLevel,
         caloriesLeft: calorieGoal - todaysCalories,
         age,
+        height,
         handleSubmitCalories,
         handleSubmitWeight,
         handleValueChange,
@@ -295,8 +305,17 @@ export const WeightLossProvider = ({ children }: WeightLossProviderProps) => {
         setGender,
         setActivityLevel,
         setAge,
+        setHeight,
         removeCalorieEntry: (idx: number) => {
           setTodaysCalorieEntries((prev) => prev.filter((_, i) => i !== idx));
+        },
+        resetCalories: () => {
+          setTodaysCalorieEntries([]);
+        },
+        resetTodaysWeight: () => {
+          setWeightHistory(
+            weightHistory.filter((entry) => entry.date !== dateToDashedDateString(new Date()))
+          );
         },
       }}
     >

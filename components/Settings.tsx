@@ -1,7 +1,8 @@
 import { FullScreenPage } from '@/components/FullScreenPage';
+import { WheelPicker } from '@/components/WheelPicker';
 import { useWeightLoss } from '@/context/WeightLossContext';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Alert, Pressable, Text, TouchableOpacity, View } from 'react-native';
 
 export const Settings = () => {
@@ -15,7 +16,27 @@ export const Settings = () => {
     setActivityLevel,
     age,
     setAge,
+    height,
+    setHeight,
   } = useWeightLoss();
+
+  const [selectedFeet, setSelectedFeet] = useState('-');
+  const [selectedInches, setSelectedInches] = useState('-');
+
+  useEffect(() => {
+    if (
+      selectedFeet !== '-' &&
+      selectedInches !== '-' &&
+      selectedFeet !== undefined &&
+      selectedInches !== undefined
+    ) {
+      const heightInInches = parseInt(selectedFeet) * 12 + parseInt(selectedInches);
+      setHeight(heightInInches);
+    }
+  }, [selectedFeet, selectedInches]);
+
+  const feetFromHeight = height !== undefined ? Math.floor(height / 12).toString() : '-';
+  const inchesFromHeight = height !== undefined ? (height % 12).toString() : '-';
 
   const handleSetAgePress = () => {
     Alert.prompt(
@@ -154,6 +175,24 @@ export const Settings = () => {
             <Text className="text-xl font-bold text-center text-white">Enter Age</Text>
           </TouchableOpacity>
         )}
+      </View>
+
+      <View className="mx-24 justify-center">
+        <Text className="text-slate-700 mb-2 font-bold text-center">Height</Text>
+        <View className="flex-row justify-center items-center">
+          <WheelPicker
+            items={['-', '4', '5', '6', '7']}
+            value={feetFromHeight}
+            onChange={setSelectedFeet}
+          />
+          <Text className="text-2xl font-bold text-center mx-4">ft</Text>
+          <WheelPicker
+            items={['-', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11']}
+            value={inchesFromHeight}
+            onChange={setSelectedInches}
+          />
+          <Text className="text-2xl font-bold text-center mx-4">in</Text>
+        </View>
       </View>
     </FullScreenPage>
   );
