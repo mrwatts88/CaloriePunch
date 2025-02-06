@@ -1,3 +1,2 @@
 - onboarding flow to capture gender, age, activity level, height, and weight loss rate goal
-- if not enough daily entries, show a tooltip saying that you need more data to make TDEE personalized and more accurate
 - allow metric units

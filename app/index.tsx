@@ -9,7 +9,7 @@ import { Mode } from '@/types/types';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import React from 'react';
-import { Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Text, TouchableOpacity, View } from 'react-native';
 
 export default function () {
   const {
@@ -27,7 +27,37 @@ export default function () {
     showCompleteDayDialog,
     caloriesLeft,
     isTodaysWeightLogged,
+    weightHistory,
+    calorieHistory,
+    gender,
+    activityLevel,
+    age,
+    height,
   } = useWeightLoss();
+
+  const missingSettingsData = !gender || !activityLevel || !age || !height;
+  const missingEntries = weightHistory.length < 14 || calorieHistory.length < 14;
+
+  const showTdeeWarning = () => {
+    let title, message;
+
+    if (missingSettingsData && missingEntries) {
+      title = 'Missing Info';
+      message = 'Go to settings and fill in all the fields to get a more accurate calorie goal.';
+      Alert.alert(title, message, [
+        { text: 'Go to Settings', onPress: () => setShowSettings(true) },
+        { text: 'Cancel', style: 'cancel' },
+      ]);
+    } else if (missingEntries) {
+      title = 'Keep Logging Daily!';
+      message = 'You need more weight and calorie entries to get the most accurate calorie goal.';
+      Alert.alert(title, message, [{ text: 'Got it' }]);
+    } else {
+      title = 'Keep Up The Good Work!';
+      message = "You're getting a personalized calorie goal based on your daily logs.";
+      Alert.alert(title, message, [{ text: 'Got it' }]);
+    }
+  };
 
   if (debug) {
     return <Debug />;
@@ -80,7 +110,13 @@ export default function () {
           <Text className="text-[#8F98FF] text-[120px] font-bold text-center mb-0 h-[100px] leading-none">
             {caloriesLeft}
           </Text>
-
+          <TouchableOpacity onPress={showTdeeWarning} className="absolute top-0 left-0 p-2">
+            <Ionicons
+              name="information-circle"
+              size={24}
+              color={missingEntries ? '#EF4444' : '#8F98FF'}
+            />
+          </TouchableOpacity>
           <TouchableOpacity
             onLongPress={() => {
               setDebug((prev) => !prev);
