@@ -215,5 +215,5 @@ export const calculateTdee = ({
   const totalCaloriesEaten = calories / 2; // we summed 28 days, so divide by 2 to get 14 day average
   const totalCaloriesBurned = totalCaloriesEaten + totalCaloriesLost;
 
-  return totalCaloriesBurned / 14;
+  return Math.round(totalCaloriesBurned / 14);
 };
