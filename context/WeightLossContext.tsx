@@ -172,7 +172,7 @@ export const WeightLossProvider = ({ children }: WeightLossProviderProps) => {
       ];
     }
 
-    setWeightHistory(updatedWeightHistory.slice(-30)); // todo: cut off entries older than 30 days
+    setWeightHistory(updatedWeightHistory.slice(-30));
   };
 
   const handleValueChange = (changedValue: string) => {
@@ -235,7 +235,7 @@ export const WeightLossProvider = ({ children }: WeightLossProviderProps) => {
       ];
     }
 
-    setCalorieHistory(updatedCalorieHistory.slice(-30)); // todo: cut off entries older than 30 days
+    setCalorieHistory(updatedCalorieHistory.slice(-30));
     setTodaysCalorieEntries([]);
   };
 
@@ -244,10 +244,10 @@ export const WeightLossProvider = ({ children }: WeightLossProviderProps) => {
     () =>
       calculateTdee({
         gender,
-        heightInches: height,
+        height,
         age,
         activityLevel,
-        weightHistory, // todo: pass units
+        weightHistory,
         calorieHistory,
       }),
     [weightHistory, calorieHistory, gender, activityLevel, age, height]
@@ -288,7 +288,7 @@ export const WeightLossProvider = ({ children }: WeightLossProviderProps) => {
         isTodaysWeightLogged,
         gender,
         activityLevel,
-        caloriesLeft: calorieGoal - todaysCalories,
+        caloriesLeft: Math.round(calorieGoal - todaysCalories),
         age,
         height,
         handleSubmitCalories,

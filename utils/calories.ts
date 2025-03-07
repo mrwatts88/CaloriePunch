@@ -131,7 +131,7 @@ export const calculateTwoWeekChange = (weightHistory: WeightHistory[]) => {
 type CalculateEquationTdeeParams = {
   gender?: Gender;
   weightPounds?: number;
-  heightInches?: number;
+  height?: number;
   age?: number;
   activityLevel: ActivityLevel;
 };
@@ -139,7 +139,7 @@ type CalculateEquationTdeeParams = {
 export const calculateEquationTdee = ({
   gender = 'female',
   weightPounds,
-  heightInches,
+  height,
   age = 40,
   activityLevel = 'lightExercise',
 }: CalculateEquationTdeeParams) => {
@@ -148,7 +148,7 @@ export const calculateEquationTdee = ({
   const defaultHeightInches = gender === 'female' ? 64 : 70;
   const defaultweightPounds = gender === 'female' ? 155 : 190;
   const weightInKg = (weightPounds ?? defaultweightPounds) / 2.20462;
-  const heightInCm = (heightInches ?? defaultHeightInches) * 2.54;
+  const heightInCm = (height ?? defaultHeightInches) * 2.54;
 
   const activityLevelMultipliers = {
     sedentary: 1.2,
@@ -175,7 +175,7 @@ export const calculateEquationTdee = ({
 type CalculateTdeeParams = {
   gender?: Gender;
   weightPounds?: number;
-  heightInches?: number;
+  height?: number;
   age?: number;
   activityLevel: ActivityLevel;
   weightHistory: WeightHistory[];
@@ -184,7 +184,7 @@ type CalculateTdeeParams = {
 
 export const calculateTdee = ({
   gender = 'female',
-  heightInches,
+  height,
   age = 40,
   activityLevel = 'lightExercise',
   weightHistory,
@@ -195,7 +195,7 @@ export const calculateTdee = ({
     return calculateEquationTdee({
       gender,
       weightPounds: weightHistory.at(-1)?.weight,
-      heightInches,
+      height,
       age,
       activityLevel,
     });

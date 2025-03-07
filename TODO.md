@@ -1,2 +1,9 @@
-- onboarding flow to capture gender, age, activity level, height, and weight loss rate goal
+- cut off entries older than 30 days in handleSubmitWeight and handleCompleteDay
 - allow metric units
+- icon
+- splash screen
+- check iPad
+- submit to app store
+- android
+- submit to play store
+- onboarding flow to capture gender, age, activity level, height, and weight loss rate goal
