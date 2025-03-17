@@ -3,7 +3,16 @@ import { WheelPicker } from '@/components/WheelPicker';
 import { useWeightLoss } from '@/context/WeightLossContext';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import React, { useEffect, useState } from 'react';
-import { Alert, Pressable, Text, TouchableOpacity, View } from 'react-native';
+import {
+  Alert,
+  Modal,
+  Platform,
+  Pressable,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
 export const Settings = () => {
   const {
@@ -22,6 +31,8 @@ export const Settings = () => {
 
   const [selectedFeet, setSelectedFeet] = useState('-');
   const [selectedInches, setSelectedInches] = useState('-');
+  const [isAgeModalVisible, setIsAgeModalVisible] = useState(false);
+  const [ageInput, setAgeInput] = useState(`${age ?? ''}`);
 
   useEffect(() => {
     if (
@@ -39,25 +50,39 @@ export const Settings = () => {
   const inchesFromHeight = height !== undefined ? (height % 12).toString() : '-';
 
   const handleSetAgePress = () => {
-    Alert.prompt(
-      'Enter Age',
-      'Please enter your age',
-      (text) => {
-        if (text) {
-          const parsed = parseInt(text);
+    if (Platform.OS === 'ios') {
+      Alert.prompt(
+        'Enter Age',
+        'Please enter your age',
+        (text) => {
+          if (text) {
+            const parsed = parseInt(text);
 
-          if (isNaN(parsed)) {
-            Alert.alert('Invalid Age', 'Please enter a valid age');
-            return;
+            if (isNaN(parsed)) {
+              Alert.alert('Invalid Age', 'Please enter a valid age');
+              return;
+            }
+
+            setAge(parseInt(text));
           }
+        },
+        undefined,
+        `${age ?? ''}`,
+        'numeric'
+      );
+    } else {
+      setIsAgeModalVisible(true);
+    }
+  };
 
-          setAge(parseInt(text));
-        }
-      },
-      undefined,
-      `${age ?? ''}`,
-      'numeric'
-    );
+  const handleAgeSubmit = () => {
+    const parsed = parseInt(ageInput);
+    if (isNaN(parsed)) {
+      Alert.alert('Invalid Age', 'Please enter a valid age');
+      return;
+    }
+    setAge(parsed);
+    setIsAgeModalVisible(false);
   };
 
   const weightLossGoalButtons = [
@@ -194,6 +219,33 @@ export const Settings = () => {
           <Text className="text-2xl font-bold text-center mx-4">in</Text>
         </View>
       </View>
+      <Modal
+        visible={isAgeModalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setIsAgeModalVisible(false)}
+      >
+        <View className="flex-1 justify-center items-center bg-black bg-opacity-50">
+          <View className="bg-white p-6 rounded-lg w-4/5 shadow-lg">
+            <Text className="text-lg font-bold mb-4">Enter Age</Text>
+            <TextInput
+              value={ageInput}
+              onChangeText={setAgeInput}
+              keyboardType="numeric"
+              className="border p-2 rounded mb-4"
+              placeholder="Enter your age"
+            />
+            <View className="flex-row justify-end">
+              <TouchableOpacity onPress={() => setIsAgeModalVisible(false)} className="mr-4">
+                <Text className="text-blue-500 font-bold">Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleAgeSubmit}>
+                <Text className="text-blue-500 font-bold">OK</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </FullScreenPage>
   );
 };

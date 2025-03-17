@@ -6,6 +6,7 @@
     "dev": "APP_VARIANT=development npx expo start -c",
     "build:sim:ios": "eas build --platform ios --profile ios-simulator",
     "build:dev:ios": "eas build --platform ios --profile development",
+    "build:dev:android": "eas build --platform android --profile development",
     "build:preview:ios": "eas build --platform ios --profile preview",
     "build:prod:ios": "eas build --platform ios --profile production --auto-submit",
     "update:dev:": "eas update --branch development",
