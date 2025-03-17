@@ -2,6 +2,7 @@
   "name": "caloriepunch",
   "main": "expo-router/entry",
   "version": "1.0.0",
+  "license": "UNLICENSED",
   "scripts": {
     "dev": "APP_VARIANT=development npx expo start -c",
     "build:sim:ios": "eas build --platform ios --profile ios-simulator",
@@ -9,6 +10,7 @@
     "build:dev:android": "eas build --platform android --profile development",
     "build:preview:ios": "eas build --platform ios --profile preview",
     "build:prod:ios": "eas build --platform ios --profile production --auto-submit",
+    "build:prod:android": "eas build --platform android --profile production",
     "update:dev:": "eas update --branch development",
     "update:preview:": "eas update --branch preview",
     "update:prod:": "eas update --branch production",
