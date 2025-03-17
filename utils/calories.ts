@@ -211,7 +211,7 @@ export const calculateTdee = ({
   );
 
   const twoWeekChange = calculateTwoWeekChange(weightHistory);
-  const totalCaloriesLost = twoWeekChange * 3500;
+  const totalCaloriesLost = -twoWeekChange * 3500; // negative because it's weight lost
   const totalCaloriesEaten = calories / 2; // we summed 28 days, so divide by 2 to get 14 day average
   const totalCaloriesBurned = totalCaloriesEaten + totalCaloriesLost;
 
