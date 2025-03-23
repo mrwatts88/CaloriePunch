@@ -6,8 +6,16 @@ import {
   getData,
   storeData,
 } from '@/utils/calories';
-import React, { createContext, ReactNode, useContext, useEffect, useMemo, useState } from 'react';
-import { Alert } from 'react-native';
+import React, {
+  createContext,
+  ReactNode,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import { Alert, AppState } from 'react-native';
 
 const DEFAULT_TODAYS_CALORIE_ENTRIES: number[] = [];
 const DEFAULT_CALORIE_HISTORY: CalorieHistory[] = [];
@@ -77,6 +85,8 @@ export const WeightLossProvider = ({ children }: WeightLossProviderProps) => {
   const [activityLevel, setActivityLevel] = useState<ActivityLevel>('lightExercise');
   const [age, setAge] = useState<number | undefined>(undefined);
   const [height, setHeight] = useState<number | undefined>(undefined);
+  const appState = useRef(AppState.currentState);
+  const [appStateVisible, setAppStateVisible] = useState(appState.current);
 
   const [areLocalStatsLoaded, setAreLocalStatsLoaded] = useState(false);
 
@@ -258,7 +268,7 @@ export const WeightLossProvider = ({ children }: WeightLossProviderProps) => {
   const isTodaysWeightLogged = useMemo(
     () =>
       !!(weightHistory.at(-1) && weightHistory.at(-1)!.date === dateToDashedDateString(new Date())),
-    [weightHistory]
+    [weightHistory, appStateVisible]
   );
 
   useEffect(() => {
@@ -266,6 +276,17 @@ export const WeightLossProvider = ({ children }: WeightLossProviderProps) => {
       setMode('calories');
     }
   }, [isTodaysWeightLogged]);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      appState.current = nextAppState;
+      setAppStateVisible(appState.current);
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
 
   return (
     <WeightLossContext.Provider
