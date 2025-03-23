@@ -12,7 +12,7 @@ type FullScreenPageProps = {
 export const FullScreenPage: React.FC<FullScreenPageProps> = ({ onClose, title, children }) => {
   return (
     <AppContainer>
-      <View className="w-full flex flex-col mb-8">
+      <View className="w-full flex flex-col mb-4">
         <View className="flex flex-row justify-between items-center w-full">
           <View className="w-[55px]" />
           <Text className="text-slate-700 text-4xl font-bold text-center flex-1">{title}</Text>

@@ -1,4 +1,5 @@
 import { FullScreenPage } from '@/components/FullScreenPage';
+import { Graph } from '@/components/Graph';
 import { useWeightLoss } from '@/context/WeightLossContext';
 import React from 'react';
 import { Alert, Text, TouchableOpacity, View } from 'react-native';
@@ -42,6 +43,7 @@ export const Summary = () => {
       <SummaryItem label="Remaining Today" value={`${caloriesLeft} Calories`} />
       <SummaryItem label="Current Weight" value={`${weightHistory.at(-1)?.weight || ''} lbs`} />
       <SummaryItem label="Change in Last 2 Weeks" value={`${twoWeekChange} lbs`} />
+      <Graph />
       <TouchableOpacity
         className="bg-[#8F98FF] py-2 rounded-lg items-center justify-center mt-auto"
         onPress={confirmClearCalories}
