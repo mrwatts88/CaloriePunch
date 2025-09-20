@@ -20,12 +20,6 @@ export const Debug = () => {
     <AppContainer>
       <ScrollView className="w-full">
         <Button title="Back" onPress={() => setDebug(false)} />
-        <Button
-          title="Reset"
-          onPress={() => {
-            AsyncStorage.clear();
-          }}
-        />
         <Text className="font-bold">TDEE: {tdee} cals/day</Text>
         <Text className="font-bold">Weight Loss Goal: {weightLossGoal} lbs/wk</Text>
         <Text className="font-bold">Deficit: {deficit} cals/day</Text>
@@ -48,6 +42,12 @@ export const Debug = () => {
         {fillInCalorieHistory(calorieHistory).map((ch) => {
           return <Text key={ch.date}>{JSON.stringify(ch)}</Text>;
         })}
+        <Button
+          title="Reset"
+          onPress={() => {
+            AsyncStorage.clear();
+          }}
+        />
       </ScrollView>
     </AppContainer>
   );

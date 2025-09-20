@@ -87,6 +87,13 @@ export const Settings = () => {
 
   const weightLossGoalButtons = [
     {
+      title: '0.25',
+      onPress: () => {
+        setWeightLossGoal(0.25);
+      },
+      isActive: weightLossGoal === 0.25,
+    },
+    {
       title: '0.5',
       onPress: () => {
         setWeightLossGoal(0.5);
@@ -106,13 +113,6 @@ export const Settings = () => {
         setWeightLossGoal(1.0);
       },
       isActive: weightLossGoal === 1.0,
-    },
-    {
-      title: '1.5',
-      onPress: () => {
-        setWeightLossGoal(1.5);
-      },
-      isActive: weightLossGoal === 1.5,
     },
   ];
 

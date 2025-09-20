@@ -8,10 +8,12 @@ import { useWeightLoss } from '@/context/WeightLossContext';
 import { Mode } from '@/types/types';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import React from 'react';
+import React, { useState } from 'react';
 import { Alert, Text, TouchableOpacity, View } from 'react-native';
 
 export default function () {
+  const [showCaloriesLeft, setShowCaloriesLeft] = useState(true);
+
   const {
     debug,
     setDebug,
@@ -26,6 +28,7 @@ export default function () {
     setShowSummary,
     showCompleteDayDialog,
     caloriesLeft,
+    todaysCalories,
     isTodaysWeightLogged,
     weightHistory,
     calorieHistory,
@@ -104,12 +107,17 @@ export default function () {
           )}
         </View>
         <View className="my-4 border-2 border-[#8F98FF] flex rounded-lg p-4 flex-1 justify-center items-center">
-          <Text className="text-[#8F98FF] text-xl mb-1 font-bold text-center">
-            Calories Left Today
-          </Text>
-          <Text className="text-[#8F98FF] text-[120px] font-bold text-center mb-0 h-[100px] leading-none">
-            {caloriesLeft}
-          </Text>
+          <TouchableOpacity
+            onPress={() => setShowCaloriesLeft(!showCaloriesLeft)}
+            className="justify-center items-center"
+          >
+            <Text className="text-[#8F98FF] text-xl mb-1 font-bold text-center">
+              {showCaloriesLeft ? 'Calories Left Today' : "Today's Calories"}
+            </Text>
+            <Text className="text-[#8F98FF] text-[120px] font-bold text-center mb-0 h-[100px] leading-none">
+              {showCaloriesLeft ? caloriesLeft : todaysCalories}
+            </Text>
+          </TouchableOpacity>
           <TouchableOpacity onPress={showTdeeWarning} className="absolute top-0 left-0 p-2">
             <Ionicons
               name="information-circle"
