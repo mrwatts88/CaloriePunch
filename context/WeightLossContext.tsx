@@ -35,6 +35,7 @@ interface WeightLossContextType {
   showSettings: boolean;
   showCalorieLog: boolean;
   showSummary: boolean;
+  showCompleteDayModal: boolean;
   weightLossGoal: number;
   calorieHistory: CalorieHistory[];
   weightHistory: WeightHistory[];
@@ -55,10 +56,12 @@ interface WeightLossContextType {
   setShowSettings: React.Dispatch<React.SetStateAction<boolean>>;
   setShowSummary: React.Dispatch<React.SetStateAction<boolean>>;
   setShowCalorieLog: React.Dispatch<React.SetStateAction<boolean>>;
+  setShowCompleteDayModal: React.Dispatch<React.SetStateAction<boolean>>;
   handleSubmitCalories: (calories: string) => void;
   handleSubmitWeight: (weight: string) => void;
   handleValueChange: (changedValue: string) => void;
   showCompleteDayDialog: () => void;
+  handleCompleteDay: (yesterday?: boolean) => void;
   setGender: React.Dispatch<React.SetStateAction<Gender | undefined>>;
   setActivityLevel: React.Dispatch<React.SetStateAction<ActivityLevel>>;
   removeCalorieEntry: (idx: number) => void;
@@ -94,6 +97,7 @@ export const WeightLossProvider = ({ children }: WeightLossProviderProps) => {
   const [showSettings, setShowSettings] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const [showCalorieLog, setShowCalorieLog] = useState(false);
+  const [showCompleteDayModal, setShowCompleteDayModal] = useState(false);
   const [calorieHistory, setCalorieHistory] = useState<CalorieHistory[]>(DEFAULT_CALORIE_HISTORY);
   const [weightHistory, setWeightHistory] = useState<WeightHistory[]>(DEFAULT_WEIGHT_HISTORY);
   const [weightLossGoal, setWeightLossGoal] = useState(DEFAULT_WEIGHT_LOSS_GOAL);
@@ -227,24 +231,7 @@ export const WeightLossProvider = ({ children }: WeightLossProviderProps) => {
   );
 
   const showCompleteDayDialog = () => {
-    Alert.alert(
-      `Completing day with ${todaysCalories} calories`,
-      'Is this calorie total for yesterday or today?',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Yesterday',
-          onPress: () => handleCompleteDay(true),
-        },
-        {
-          text: 'Today',
-          onPress: () => handleCompleteDay(),
-        },
-      ]
-    );
+    setShowCompleteDayModal(true);
   };
 
   const handleCompleteDay = (yesterday = false) => {
@@ -339,6 +326,7 @@ export const WeightLossProvider = ({ children }: WeightLossProviderProps) => {
         showSettings,
         showSummary,
         showCalorieLog,
+        showCompleteDayModal,
         weightLossGoal,
         calorieHistory,
         weightHistory,
@@ -356,12 +344,14 @@ export const WeightLossProvider = ({ children }: WeightLossProviderProps) => {
         handleSubmitWeight,
         handleValueChange,
         showCompleteDayDialog,
+        handleCompleteDay,
         setMode,
         setValue,
         setDebug,
         setShowSettings,
         setShowSummary,
         setShowCalorieLog,
+        setShowCompleteDayModal,
         setWeightLossGoal,
         setGender,
         setActivityLevel,
@@ -379,25 +369,25 @@ export const WeightLossProvider = ({ children }: WeightLossProviderProps) => {
           );
         },
         addSugar: () => {
-          setTodaysSugar((prev) => prev + 5);
+          setTodaysSugar((prev) => prev + 3);
         },
         addWater: () => {
           setTodaysWater((prev) => prev + 8);
         },
         addProtein: () => {
-          setTodaysProtein((prev) => prev + 10);
+          setTodaysProtein((prev) => prev + 5);
         },
         addCaffeine: () => {
           setTodaysCaffeine((prev) => prev + 25);
         },
         subtractSugar: () => {
-          setTodaysSugar((prev) => Math.max(0, prev - 5));
+          setTodaysSugar((prev) => Math.max(0, prev - 3));
         },
         subtractWater: () => {
           setTodaysWater((prev) => Math.max(0, prev - 8));
         },
         subtractProtein: () => {
-          setTodaysProtein((prev) => Math.max(0, prev - 10));
+          setTodaysProtein((prev) => Math.max(0, prev - 5));
         },
         subtractCaffeine: () => {
           setTodaysCaffeine((prev) => Math.max(0, prev - 25));

@@ -1,5 +1,6 @@
 import { AppContainer } from '@/components/AppContainer';
 import { CalorieLog } from '@/components/CalorieLog';
+import { CompleteDayDialog } from '@/components/CompleteDayDialog';
 import { Debug } from '@/components/Debug';
 import { CaloriesKeyboard, WeightKeyboard } from '@/components/keyboard';
 import { Settings } from '@/components/Settings';
@@ -60,7 +61,10 @@ export default function () {
     setShowCalorieLog,
     showSummary,
     setShowSummary,
+    showCompleteDayModal,
+    setShowCompleteDayModal,
     showCompleteDayDialog,
+    handleCompleteDay,
     caloriesLeft,
     todaysCalories,
     todaysSugar,
@@ -160,7 +164,7 @@ export default function () {
             <Text className="text-[#8F98FF] text-xl mb-1 font-bold text-center">
               {showCaloriesLeft ? 'Calories Left Today' : "Today's Calories"}
             </Text>
-            <Text className="text-[#8F98FF] text-[120px] font-bold text-center mb-0 h-[100px] leading-none">
+            <Text className="text-[#8F98FF] text-[100px] font-bold text-center mb-0 h-[80px] leading-none">
               {showCaloriesLeft ? caloriesLeft : todaysCalories}
             </Text>
           </TouchableOpacity>
@@ -173,6 +177,26 @@ export default function () {
               />
             </TouchableOpacity>
             <TouchableOpacity
+              onPress={() => setShowSummary(true)}
+            >
+              <Ionicons name="stats-chart" size={24} color="#8F98FF" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setShowCalorieLog(true)}
+            >
+              <FontAwesome5 name="clipboard-list" size={24} color="#8F98FF" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onLongPress={() => {
+                setDebug((prev) => !prev);
+              }}
+              onPress={() => setShowSettings(true)}
+            >
+              <Ionicons name="settings" size={24} color="#8F98FF" />
+            </TouchableOpacity>
+          </View>
+          <View className="absolute bottom-0 left-0 right-0 flex flex-row justify-between items-center p-2">
+            <TouchableOpacity
               onPress={addWater}
               onLongPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -181,11 +205,13 @@ export default function () {
               className="flex-col items-center"
             >
               <Ionicons name="water" size={18} color={getTrackerColor('water', todaysWater)} />
-              <Text
-                className={`text-xs font-bold`}
-                style={{ color: getTrackerColor('water', todaysWater) }}
-              >
-                {todaysWater}oz
+              <Text className={`text-xs font-bold`}>
+                <Text style={{ color: getTrackerColor('water', todaysWater) }}>
+                  {todaysWater}/
+                </Text>
+                <Text style={{ color: SUCCESS_COLOR }}>
+                  {THRESHOLDS.water}oz
+                </Text>
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -201,11 +227,13 @@ export default function () {
                 size={16}
                 color={getTrackerColor('protein', todaysProtein)}
               />
-              <Text
-                className={`text-xs font-bold`}
-                style={{ color: getTrackerColor('protein', todaysProtein) }}
-              >
-                {todaysProtein}g
+              <Text className={`text-xs font-bold`}>
+                <Text style={{ color: getTrackerColor('protein', todaysProtein) }}>
+                  {todaysProtein}/
+                </Text>
+                <Text style={{ color: SUCCESS_COLOR }}>
+                  {THRESHOLDS.protein}g
+                </Text>
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -217,11 +245,13 @@ export default function () {
               className="flex-col items-center"
             >
               <FontAwesome5 name="cube" size={16} color={getTrackerColor('sugar', todaysSugar)} />
-              <Text
-                className={`text-xs font-bold`}
-                style={{ color: getTrackerColor('sugar', todaysSugar) }}
-              >
-                {todaysSugar}g
+              <Text className={`text-xs font-bold`}>
+                <Text style={{ color: getTrackerColor('sugar', todaysSugar) }}>
+                  {todaysSugar}/
+                </Text>
+                <Text style={{ color: WARNING_COLOR }}>
+                  {THRESHOLDS.sugar}g
+                </Text>
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -233,34 +263,16 @@ export default function () {
               className="flex-col items-center"
             >
               <Ionicons name="cafe" size={16} color={getTrackerColor('caffeine', todaysCaffeine)} />
-              <Text
-                className={`text-xs font-bold`}
-                style={{ color: getTrackerColor('caffeine', todaysCaffeine) }}
-              >
-                {todaysCaffeine}mg
+              <Text className={`text-xs font-bold`}>
+                <Text style={{ color: getTrackerColor('caffeine', todaysCaffeine) }}>
+                  {todaysCaffeine}/
+                </Text>
+                <Text style={{ color: WARNING_COLOR }}>
+                  {THRESHOLDS.caffeine}mg
+                </Text>
               </Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              onLongPress={() => {
-                setDebug((prev) => !prev);
-              }}
-              onPress={() => setShowSettings(true)}
-            >
-              <Ionicons name="settings" size={24} color="#8F98FF" />
-            </TouchableOpacity>
           </View>
-          <TouchableOpacity
-            onPress={() => setShowSummary(true)}
-            className="absolute left-0 bottom-0 p-3"
-          >
-            <Ionicons name="stats-chart" size={24} color="#8F98FF" />
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => setShowCalorieLog(true)}
-            className="absolute right-0 bottom-0 p-3"
-          >
-            <FontAwesome5 name="clipboard-list" size={24} color="#8F98FF" />
-          </TouchableOpacity>
         </View>
       </View>
       <View className="rounded-lg justify-center items-center overflow-hidden w-full">
@@ -288,6 +300,18 @@ export default function () {
           Complete Day
         </Text>
       </TouchableOpacity>
+      <CompleteDayDialog
+        visible={showCompleteDayModal}
+        onClose={() => setShowCompleteDayModal(false)}
+        onCompleteToday={() => {
+          handleCompleteDay(false);
+          setShowCompleteDayModal(false);
+        }}
+        onCompleteYesterday={() => {
+          handleCompleteDay(true);
+          setShowCompleteDayModal(false);
+        }}
+      />
     </AppContainer>
   );
 }
