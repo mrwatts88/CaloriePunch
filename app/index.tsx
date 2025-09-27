@@ -8,8 +8,42 @@ import { useWeightLoss } from '@/context/WeightLossContext';
 import { Mode } from '@/types/types';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import * as Haptics from 'expo-haptics';
 import React, { useState } from 'react';
 import { Alert, Text, TouchableOpacity, View } from 'react-native';
+
+const THRESHOLDS = {
+  water: 64,
+  sugar: 60,
+  protein: 100,
+  caffeine: 200,
+};
+
+const DEFAULT_COLORS = {
+  water: '#60A5FA',
+  sugar: '#1E40AF',
+  protein: '#8B5CF6',
+  caffeine: '#8B4513',
+};
+
+const SUCCESS_COLOR = '#22C55E';
+const WARNING_COLOR = '#EF4444';
+
+const getTrackerColor = (tracker: string, value: number) => {
+  if (
+    (tracker === 'water' && value >= THRESHOLDS.water) ||
+    (tracker === 'protein' && value >= THRESHOLDS.protein)
+  ) {
+    return SUCCESS_COLOR;
+  }
+  if (
+    (tracker === 'sugar' && value >= THRESHOLDS.sugar) ||
+    (tracker === 'caffeine' && value >= THRESHOLDS.caffeine)
+  ) {
+    return WARNING_COLOR;
+  }
+  return DEFAULT_COLORS[tracker as keyof typeof DEFAULT_COLORS];
+};
 
 export default function () {
   const [showCaloriesLeft, setShowCaloriesLeft] = useState(true);
@@ -29,6 +63,18 @@ export default function () {
     showCompleteDayDialog,
     caloriesLeft,
     todaysCalories,
+    todaysSugar,
+    todaysWater,
+    todaysProtein,
+    todaysCaffeine,
+    addSugar,
+    addWater,
+    addProtein,
+    addCaffeine,
+    subtractSugar,
+    subtractWater,
+    subtractProtein,
+    subtractCaffeine,
     isTodaysWeightLogged,
     weightHistory,
     calorieHistory,
@@ -118,33 +164,102 @@ export default function () {
               {showCaloriesLeft ? caloriesLeft : todaysCalories}
             </Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={showTdeeWarning} className="absolute top-0 left-0 p-2">
-            <Ionicons
-              name="information-circle"
-              size={24}
-              color={missingEntries ? '#EF4444' : '#8F98FF'}
-            />
-          </TouchableOpacity>
+          <View className="absolute top-0 left-0 right-0 flex flex-row justify-between items-start p-2">
+            <TouchableOpacity onPress={showTdeeWarning}>
+              <Ionicons
+                name="information-circle"
+                size={24}
+                color={missingEntries ? '#EF4444' : '#8F98FF'}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={addWater}
+              onLongPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                subtractWater();
+              }}
+              className="flex-col items-center"
+            >
+              <Ionicons name="water" size={18} color={getTrackerColor('water', todaysWater)} />
+              <Text
+                className={`text-xs font-bold`}
+                style={{ color: getTrackerColor('water', todaysWater) }}
+              >
+                {todaysWater}oz
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={addProtein}
+              onLongPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                subtractProtein();
+              }}
+              className="flex-col items-center"
+            >
+              <FontAwesome5
+                name="drumstick-bite"
+                size={16}
+                color={getTrackerColor('protein', todaysProtein)}
+              />
+              <Text
+                className={`text-xs font-bold`}
+                style={{ color: getTrackerColor('protein', todaysProtein) }}
+              >
+                {todaysProtein}g
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={addSugar}
+              onLongPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                subtractSugar();
+              }}
+              className="flex-col items-center"
+            >
+              <FontAwesome5 name="cube" size={16} color={getTrackerColor('sugar', todaysSugar)} />
+              <Text
+                className={`text-xs font-bold`}
+                style={{ color: getTrackerColor('sugar', todaysSugar) }}
+              >
+                {todaysSugar}g
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={addCaffeine}
+              onLongPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                subtractCaffeine();
+              }}
+              className="flex-col items-center"
+            >
+              <Ionicons name="cafe" size={16} color={getTrackerColor('caffeine', todaysCaffeine)} />
+              <Text
+                className={`text-xs font-bold`}
+                style={{ color: getTrackerColor('caffeine', todaysCaffeine) }}
+              >
+                {todaysCaffeine}mg
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onLongPress={() => {
+                setDebug((prev) => !prev);
+              }}
+              onPress={() => setShowSettings(true)}
+            >
+              <Ionicons name="settings" size={24} color="#8F98FF" />
+            </TouchableOpacity>
+          </View>
           <TouchableOpacity
-            onLongPress={() => {
-              setDebug((prev) => !prev);
-            }}
-            onPress={() => setShowSettings(true)}
-            className="absolute right-0 top-0 p-2"
+            onPress={() => setShowSummary(true)}
+            className="absolute left-0 bottom-0 p-3"
           >
-            <Ionicons name="settings" size={24} color="#8F98FF" />
+            <Ionicons name="stats-chart" size={24} color="#8F98FF" />
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => setShowCalorieLog(true)}
             className="absolute right-0 bottom-0 p-3"
           >
             <FontAwesome5 name="clipboard-list" size={24} color="#8F98FF" />
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => setShowSummary(true)}
-            className="absolute left-0 bottom-0 p-3"
-          >
-            <Ionicons name="stats-chart" size={24} color="#8F98FF" />
           </TouchableOpacity>
         </View>
       </View>

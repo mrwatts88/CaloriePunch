@@ -28,6 +28,10 @@ interface WeightLossContextType {
   value: string;
   todaysCalories: number;
   todaysCalorieEntries: number[];
+  todaysSugar: number;
+  todaysWater: number;
+  todaysProtein: number;
+  todaysCaffeine: number;
   showSettings: boolean;
   showCalorieLog: boolean;
   showSummary: boolean;
@@ -62,6 +66,14 @@ interface WeightLossContextType {
   resetCalories: () => void;
   resetTodaysWeight: () => void;
   setHeight: React.Dispatch<React.SetStateAction<number | undefined>>;
+  addSugar: () => void;
+  addWater: () => void;
+  addProtein: () => void;
+  addCaffeine: () => void;
+  subtractSugar: () => void;
+  subtractWater: () => void;
+  subtractProtein: () => void;
+  subtractCaffeine: () => void;
 }
 
 interface WeightLossProviderProps {
@@ -75,6 +87,10 @@ export const WeightLossProvider = ({ children }: WeightLossProviderProps) => {
   const [mode, setMode] = useState('calories');
   const [value, setValue] = useState('');
   const [todaysCalorieEntries, setTodaysCalorieEntries] = useState(DEFAULT_TODAYS_CALORIE_ENTRIES);
+  const [todaysSugar, setTodaysSugar] = useState(0);
+  const [todaysWater, setTodaysWater] = useState(0);
+  const [todaysProtein, setTodaysProtein] = useState(0);
+  const [todaysCaffeine, setTodaysCaffeine] = useState(0);
   const [showSettings, setShowSettings] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const [showCalorieLog, setShowCalorieLog] = useState(false);
@@ -93,6 +109,10 @@ export const WeightLossProvider = ({ children }: WeightLossProviderProps) => {
   useEffect(() => {
     const init = async () => {
       const localTodaysCalorieEntries = await getData('todaysCalorieEntries');
+      const localTodaysSugar = await getData('todaysSugar');
+      const localTodaysWater = await getData('todaysWater');
+      const localTodaysProtein = await getData('todaysProtein');
+      const localTodaysCaffeine = await getData('todaysCaffeine');
       const localCalorieHistory = await getData('calorieHistory');
       const localWeightHistory = await getData('weightHistory');
       const localWeightLossGoal = await getData('weightLossGoal');
@@ -106,6 +126,10 @@ export const WeightLossProvider = ({ children }: WeightLossProviderProps) => {
           ? JSON.parse(localTodaysCalorieEntries)
           : DEFAULT_TODAYS_CALORIE_ENTRIES
       );
+      setTodaysSugar(localTodaysSugar ? parseInt(localTodaysSugar) : 0);
+      setTodaysWater(localTodaysWater ? parseInt(localTodaysWater) : 0);
+      setTodaysProtein(localTodaysProtein ? parseInt(localTodaysProtein) : 0);
+      setTodaysCaffeine(localTodaysCaffeine ? parseInt(localTodaysCaffeine) : 0);
       setCalorieHistory(
         localCalorieHistory ? JSON.parse(localCalorieHistory) : DEFAULT_CALORIE_HISTORY
       );
@@ -129,6 +153,10 @@ export const WeightLossProvider = ({ children }: WeightLossProviderProps) => {
     if (!areLocalStatsLoaded) return;
 
     storeData('todaysCalorieEntries', JSON.stringify(todaysCalorieEntries));
+    storeData('todaysSugar', todaysSugar.toString());
+    storeData('todaysWater', todaysWater.toString());
+    storeData('todaysProtein', todaysProtein.toString());
+    storeData('todaysCaffeine', todaysCaffeine.toString());
     storeData('calorieHistory', JSON.stringify(calorieHistory));
     storeData('weightHistory', JSON.stringify(weightHistory));
     storeData('weightLossGoal', weightLossGoal.toString());
@@ -138,6 +166,10 @@ export const WeightLossProvider = ({ children }: WeightLossProviderProps) => {
     storeData('height', height?.toString() ?? '');
   }, [
     todaysCalorieEntries,
+    todaysSugar,
+    todaysWater,
+    todaysProtein,
+    todaysCaffeine,
     calorieHistory,
     weightHistory,
     weightLossGoal,
@@ -247,6 +279,10 @@ export const WeightLossProvider = ({ children }: WeightLossProviderProps) => {
 
     setCalorieHistory(updatedCalorieHistory.slice(-30));
     setTodaysCalorieEntries([]);
+    setTodaysSugar(0);
+    setTodaysWater(0);
+    setTodaysProtein(0);
+    setTodaysCaffeine(0);
   };
 
   const twoWeekChange = useMemo(() => calculateTwoWeekChange(weightHistory), [weightHistory]);
@@ -296,6 +332,10 @@ export const WeightLossProvider = ({ children }: WeightLossProviderProps) => {
         value,
         todaysCalories,
         todaysCalorieEntries,
+        todaysSugar,
+        todaysWater,
+        todaysProtein,
+        todaysCaffeine,
         showSettings,
         showSummary,
         showCalorieLog,
@@ -337,6 +377,30 @@ export const WeightLossProvider = ({ children }: WeightLossProviderProps) => {
           setWeightHistory(
             weightHistory.filter((entry) => entry.date !== dateToDashedDateString(new Date()))
           );
+        },
+        addSugar: () => {
+          setTodaysSugar((prev) => prev + 5);
+        },
+        addWater: () => {
+          setTodaysWater((prev) => prev + 8);
+        },
+        addProtein: () => {
+          setTodaysProtein((prev) => prev + 10);
+        },
+        addCaffeine: () => {
+          setTodaysCaffeine((prev) => prev + 25);
+        },
+        subtractSugar: () => {
+          setTodaysSugar((prev) => Math.max(0, prev - 5));
+        },
+        subtractWater: () => {
+          setTodaysWater((prev) => Math.max(0, prev - 8));
+        },
+        subtractProtein: () => {
+          setTodaysProtein((prev) => Math.max(0, prev - 10));
+        },
+        subtractCaffeine: () => {
+          setTodaysCaffeine((prev) => Math.max(0, prev - 25));
         },
       }}
     >
