@@ -12,7 +12,7 @@ type ButtonProps = {
 const Button: React.FC<ButtonProps> = ({ title, onPress, isEnd }) => (
   <TouchableOpacity
     disabled={title === 'skip'}
-    className={`flex-1 h-[60px] justify-center items-center mb-0.5 ${isEnd ? '' : 'mr-0.5'} ${
+    className={`flex-1 h-[55px] justify-center items-center mb-0.5 ${isEnd ? '' : 'mr-0.5'} ${
       ['back', 'skip'].includes(title) ? 'bg-[#FF7648]' : 'bg-[#4DC591]'
     }`}
     onPress={() => {

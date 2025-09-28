@@ -11,7 +11,7 @@ type ButtonProps = {
 };
 const Button: React.FC<ButtonProps> = ({ title, onPress, isEnd }) => (
   <TouchableOpacity
-    className={`flex-1 h-[60px] justify-center items-center mb-0.5 ${isEnd ? '' : 'mr-0.5'} ${
+    className={`flex-1 h-[55px] justify-center items-center mb-0.5 ${isEnd ? '' : 'mr-0.5'} ${
       ['back', 'plusminus'].includes(title) ? 'bg-[#8F98FF]' : 'bg-[#4DC591]'
     }`}
     onPress={() => {
