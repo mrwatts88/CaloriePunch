@@ -97,6 +97,9 @@ export const CompleteDayDialog: React.FC<CompleteDayDialogProps> = ({
             withDelay(1000, withTiming(0, { duration: 500 }))
           )
         );
+      } else {
+        // For regular days, just show the title normally
+        celebrationScale.value = withSpring(1, { damping: 15, stiffness: 150 });
       }
     } else {
       modalScale.value = 0;
@@ -142,7 +145,7 @@ export const CompleteDayDialog: React.FC<CompleteDayDialogProps> = ({
         >
           <Animated.View style={[celebrationAnimatedStyle]}>
             <Text className={`text-xl font-bold text-center mb-4 ${
-              isPerfectDay ? 'text-green-600' : ''
+              isPerfectDay ? 'text-green-600' : 'text-[#8F98FF]'
             }`}>
               {isPerfectDay ? '🎉 Perfect Day! 🎉' : 'Complete Day'}
             </Text>

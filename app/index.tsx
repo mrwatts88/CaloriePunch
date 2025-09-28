@@ -3,10 +3,13 @@ import { CalorieLog } from '@/components/CalorieLog';
 import { CompleteDayDialog } from '@/components/CompleteDayDialog';
 import { Debug } from '@/components/Debug';
 import { CaloriesKeyboard, WeightKeyboard } from '@/components/keyboard';
+import { NutritionConfirmDialog } from '@/components/NutritionConfirmDialog';
 import { Settings } from '@/components/Settings';
 import { Summary } from '@/components/Summary';
+import { VoiceRecorder } from '@/components/VoiceRecorder';
 import { useWeightLoss } from '@/context/WeightLossContext';
 import { Mode } from '@/types/types';
+import { AIParseResult, NutritionData } from '@/types/aiTypes';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Haptics from 'expo-haptics';
@@ -48,6 +51,10 @@ const getTrackerColor = (tracker: string, value: number) => {
 
 export default function () {
   const [showCaloriesLeft, setShowCaloriesLeft] = useState(true);
+  const [showNutritionConfirm, setShowNutritionConfirm] = useState(false);
+  const [pendingNutritionData, setPendingNutritionData] = useState<NutritionData | null>(null);
+  const [pendingTranscription, setPendingTranscription] = useState<string | undefined>(undefined);
+  const [pendingError, setPendingError] = useState<string | undefined>(undefined);
 
   const {
     debug,
@@ -86,10 +93,40 @@ export default function () {
     activityLevel,
     age,
     height,
+    handleAISubmission,
   } = useWeightLoss();
 
   const missingSettingsData = !gender || !activityLevel || !age || !height;
   const missingEntries = weightHistory.length < 14 || calorieHistory.length < 14;
+
+  const handleNutritionParsed = (result: AIParseResult) => {
+    if (result.success && result.data) {
+      setPendingNutritionData(result.data);
+      setPendingTranscription(result.transcription);
+      setPendingError(undefined);
+      setShowNutritionConfirm(true);
+    } else {
+      // Silent failure for speech recognition errors - no modal shown
+      console.log('Voice input failed:', result.error);
+    }
+  };
+
+  const handleConfirmNutrition = () => {
+    if (pendingNutritionData) {
+      handleAISubmission(pendingNutritionData);
+    }
+    setShowNutritionConfirm(false);
+    setPendingNutritionData(null);
+    setPendingTranscription(undefined);
+    setPendingError(undefined);
+  };
+
+  const handleCancelNutrition = () => {
+    setShowNutritionConfirm(false);
+    setPendingNutritionData(null);
+    setPendingTranscription(undefined);
+    setPendingError(undefined);
+  };
 
   const showTdeeWarning = () => {
     let title, message;
@@ -156,34 +193,20 @@ export default function () {
             </TouchableOpacity>
           )}
         </View>
-        <View className="my-4 border-2 border-[#8F98FF] flex rounded-lg p-4 flex-1 justify-center items-center">
-          <TouchableOpacity
-            onPress={() => setShowCaloriesLeft(!showCaloriesLeft)}
-            className="justify-center items-center"
-          >
-            <Text className="text-[#8F98FF] text-xl mb-1 font-bold text-center">
-              {showCaloriesLeft ? 'Calories Left Today' : "Today's Calories"}
-            </Text>
-            <Text className="text-[#8F98FF] text-[100px] font-bold text-center mb-0 h-[80px] leading-none">
-              {showCaloriesLeft ? caloriesLeft : todaysCalories}
-            </Text>
-          </TouchableOpacity>
-          <View className="absolute top-0 left-0 right-0 flex flex-row justify-between items-start p-2">
-            <TouchableOpacity onPress={showTdeeWarning}>
+        <View className="my-4 border-2 border-[#8F98FF] rounded-lg p-2 flex-1">
+          {/* Top Row - Icons */}
+          <View className="flex-row justify-between items-center mb-2 gap-2">
+            <TouchableOpacity onPress={showTdeeWarning} className="flex-1 bg-[#8F98FF]/10 rounded-lg p-2 items-center h-12">
               <Ionicons
                 name="information-circle"
                 size={24}
                 color={missingEntries ? '#EF4444' : '#8F98FF'}
               />
             </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => setShowSummary(true)}
-            >
+            <TouchableOpacity onPress={() => setShowSummary(true)} className="flex-1 bg-[#8F98FF]/10 rounded-lg p-2 items-center h-12">
               <Ionicons name="stats-chart" size={24} color="#8F98FF" />
             </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => setShowCalorieLog(true)}
-            >
+            <TouchableOpacity onPress={() => setShowCalorieLog(true)} className="flex-1 bg-[#8F98FF]/10 rounded-lg p-2 items-center h-12">
               <FontAwesome5 name="clipboard-list" size={24} color="#8F98FF" />
             </TouchableOpacity>
             <TouchableOpacity
@@ -191,18 +214,47 @@ export default function () {
                 setDebug((prev) => !prev);
               }}
               onPress={() => setShowSettings(true)}
+              className="flex-1 bg-[#8F98FF]/10 rounded-lg p-2 items-center h-12"
             >
               <Ionicons name="settings" size={24} color="#8F98FF" />
             </TouchableOpacity>
           </View>
-          <View className="absolute bottom-0 left-0 right-0 flex flex-row justify-between items-center p-2">
+
+          {/* Middle Row - Main Content */}
+          <View className="flex-row items-center flex-1">
+            <View className="w-12" />
+            <TouchableOpacity
+              onPress={() => setShowCaloriesLeft(!showCaloriesLeft)}
+              className="flex-1 justify-center items-center"
+            >
+              <Text className="text-[#8F98FF] text-xl mb-1 font-bold text-center">
+                {showCaloriesLeft ? 'Calories Left Today' : "Today's Calories"}
+              </Text>
+              <Text className="text-[#8F98FF] text-[90px] font-bold text-center mb-0 h-[75px] leading-none">
+                {showCaloriesLeft ? caloriesLeft : todaysCalories}
+              </Text>
+            </TouchableOpacity>
+            {mode === Mode.Calories && (
+              <VoiceRecorder
+                onNutritionParsed={handleNutritionParsed}
+                disabled={false}
+                compact={true}
+              />
+            )}
+            {mode !== Mode.Calories && (
+              <View className="w-12 justify-center items-center bg-[#8F98FF]/10 rounded-lg h-full" />
+            )}
+          </View>
+
+          {/* Bottom Row - Macro Trackers */}
+          <View className="flex-row justify-between items-center mt-2 gap-2">
             <TouchableOpacity
               onPress={addWater}
               onLongPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                 subtractWater();
               }}
-              className="flex-col items-center"
+              className="flex-1 flex-col items-center bg-[#8F98FF]/10 rounded-lg p-2 h-12"
             >
               <Ionicons name="water" size={18} color={getTrackerColor('water', todaysWater)} />
               <Text className={`text-xs font-bold`}>
@@ -220,7 +272,7 @@ export default function () {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                 subtractProtein();
               }}
-              className="flex-col items-center"
+              className="flex-1 flex-col items-center bg-[#8F98FF]/10 rounded-lg p-2 h-12"
             >
               <FontAwesome5
                 name="drumstick-bite"
@@ -242,7 +294,7 @@ export default function () {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                 subtractSugar();
               }}
-              className="flex-col items-center"
+              className="flex-1 flex-col items-center bg-[#8F98FF]/10 rounded-lg p-2 h-12"
             >
               <FontAwesome5 name="cube" size={16} color={getTrackerColor('sugar', todaysSugar)} />
               <Text className={`text-xs font-bold`}>
@@ -260,7 +312,7 @@ export default function () {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                 subtractCaffeine();
               }}
-              className="flex-col items-center"
+              className="flex-1 flex-col items-center bg-[#8F98FF]/10 rounded-lg p-2 h-12"
             >
               <Ionicons name="cafe" size={16} color={getTrackerColor('caffeine', todaysCaffeine)} />
               <Text className={`text-xs font-bold`}>
@@ -311,6 +363,14 @@ export default function () {
           handleCompleteDay(true);
           setShowCompleteDayModal(false);
         }}
+      />
+      <NutritionConfirmDialog
+        visible={showNutritionConfirm}
+        nutritionData={pendingNutritionData}
+        transcription={pendingTranscription}
+        error={pendingError}
+        onConfirm={handleConfirmNutrition}
+        onCancel={handleCancelNutrition}
       />
     </AppContainer>
   );

@@ -1,3 +1,5 @@
+import 'dotenv/config';
+
 const VERSION = '1.1.0';
 const IS_DEV = process.env.APP_VARIANT === 'development';
 const IS_PREVIEW = process.env.APP_VARIANT === 'preview';
@@ -61,6 +63,8 @@ export default {
     },
     plugins: [
       'expo-router',
+      'expo-audio',
+      'expo-speech-recognition',
       [
         'expo-splash-screen',
         {
@@ -75,6 +79,14 @@ export default {
     extra: {
       router: { origin: false },
       eas: { projectId: PROJECT_ID },
+      // Environment variables are exposed here for runtime access
+      // In EAS builds, these come from the build environment
+      // In local dev, these come from .env file
+      env: {
+        // Add your environment variables here
+        // Example: API_URL: process.env.API_URL,
+        OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+      },
     },
     owner: OWNER,
     updates: {

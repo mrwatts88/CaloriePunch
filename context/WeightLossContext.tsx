@@ -1,4 +1,5 @@
 import { ActivityLevel, CalorieHistory, Gender, WeightHistory } from '@/types/types';
+import { NutritionData } from '@/types/aiTypes';
 import {
   calculateTdee,
   calculateTwoWeekChange,
@@ -15,7 +16,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { Alert, AppState } from 'react-native';
+import { AppState } from 'react-native';
 
 const DEFAULT_TODAYS_CALORIE_ENTRIES: number[] = [];
 const DEFAULT_CALORIE_HISTORY: CalorieHistory[] = [];
@@ -77,6 +78,7 @@ interface WeightLossContextType {
   subtractWater: () => void;
   subtractProtein: () => void;
   subtractCaffeine: () => void;
+  handleAISubmission: (data: NutritionData) => void;
 }
 
 interface WeightLossProviderProps {
@@ -391,6 +393,26 @@ export const WeightLossProvider = ({ children }: WeightLossProviderProps) => {
         },
         subtractCaffeine: () => {
           setTodaysCaffeine((prev) => Math.max(0, prev - 25));
+        },
+        handleAISubmission: (data: NutritionData) => {
+          // Add calories if any
+          if (data.calories > 0) {
+            setTodaysCalorieEntries((prev) => [...prev, Math.round(data.calories)]);
+          }
+
+          // Add macros
+          if (data.protein > 0) {
+            setTodaysProtein((prev) => prev + Math.round(data.protein));
+          }
+          if (data.sugar > 0) {
+            setTodaysSugar((prev) => prev + Math.round(data.sugar));
+          }
+          if (data.caffeine > 0) {
+            setTodaysCaffeine((prev) => prev + Math.round(data.caffeine));
+          }
+          if (data.water > 0) {
+            setTodaysWater((prev) => prev + Math.round(data.water));
+          }
         },
       }}
     >
